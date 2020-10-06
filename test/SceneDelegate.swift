@@ -8,19 +8,130 @@
 
 import UIKit
 import SwiftUI
+import Combine
+
+// ----------- TEST -----------
+
+class AppState {
+    @Observable var greeting = "Hej"
+    @Observable var count = 0
+    @Observable var mainContentGreeting = "Hello counter world"
+    @Observable var nilable: String? = nil
+    @Observable var testTrigger = false
+}
+
+class EnvAppState: ObservableObject {
+    @Published var count = 0
+}
+
+// -----------
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-
     var window: UIWindow?
-
-
+    @Observable var cryBaby = false
+    @Observable var multiplier = 2
+    var computed: Computed<String>!
+    
+    
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
 
         // Create the SwiftUI view that provides the window contents.
-        let contentView = ContentView()
+        let state = AppState()
+        
+        computed = Computed({
+            return "COMPUTED got count \(state.count)"
+        })
+        // runtimes:
+        // 0.07173597812652588
+        // 0.07014095783233643
+        // 0.06776607036590576
+        var start: Date!
+        autorun {
+            print("Autorun on computed (last in updatelist) got computed \(self.computed.value)")
+            print("Autorun got count \(state.count)")
+            if state.count == 4 {
+                print("Update time \(Date().timeIntervalSince(start))")
+            }
+        }
+        
+        start = Date()
+        inTransaction {
+            state.count = 1
+            inTransaction {
+                state.count = 2
+                inTransaction {
+                    state.count = 3
+                }
+            }
+            inTransaction {
+                state.count = 4
+            }
+        }
+//
+//        let superCOmputed = Computed({
+//            print("super!:::: \(self.computed.value)")
+//        })
+//
+//        autorun {
+//            print(superCOmputed.value)
+//        }
+//
+//        autorun {
+//            print("First autorun for computed: \(self.computed.value)")
+//        }
+//
+//        DispatchQueue.global().asyncAfter(deadline: .now() + 8, execute: {
+//            autorun {
+//                print("Second autorun for computed: \(self.computed.value)")
+//            }
+//
+//            DispatchQueue.global().asyncAfter(deadline: .now() + 2, execute: {
+//                state.count = 0
+//            })
+//        })
+        
+        let contentView = ContentView().environmentObject(StateProvider(state)).environmentObject(EnvAppState())
+        
+//        _ = autorun({
+//            print("Updated count to \(state.count)")
+//        })
+        
+//        inTransaction {
+//            state.count = -666
+//            autorun {
+//                print("In transaction: \(state.count) --- \(state.greeting)")
+//            }
+//        }
+        
+//        let reactionCancel = reaction({
+//            return (state.mainContentGreeting, state.count, self.cryBaby)
+//        }, {
+//            print("Reacted to (\($0.0), \($0.1), \($0.2))")
+//        })
+        
+//        for i in 0...500 {
+//            DispatchQueue.global().asyncAfter(deadline: .now() + 1, execute: {
+//                inTransaction({
+//                    state.count = i
+//                    inTransaction({
+//                        state.count = i
+//                        state.mainContentGreeting = "Damn boyo! \(i)"
+//                    })
+//
+//                    state.mainContentGreeting = "Boyo Damn! \(i)"
+//                })
+//            })
+//        }
+        
+//        DispatchQueue.global().asyncAfter(deadline: .now() + 5, execute: {
+//            self.cryBaby.toggle()
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
+//                reactionCancel.cancel()
+//            })
+//        })
 
         // Use a UIHostingController as window root view controller.
         if let windowScene = scene as? UIWindowScene {
