@@ -16,6 +16,7 @@ protocol IObservable: AnyObject {
 }
 
 extension IObservable {
+    // TODO: rename
      func willGetValue() {
         if let obs = ObserverAdministrator.shared.currentObserverContext {
             os_unfair_lock_lock(&observersLock)
@@ -29,17 +30,23 @@ extension IObservable {
         }
     }
     
-     func didSetValue() {
+     func scheduleObserversForUpdate() {
         os_unfair_lock_lock(&observersLock)
         // Take copy to prevent deadlock between our lock and transactionLock..
         let observers = self.observers
         os_unfair_lock_unlock(&observersLock)
-        ObserverAdministrator.shared.update(observers: observers)
+        ObserverAdministrator.shared.scheduleForUpdates(observers: observers)
+        
+        #if DEBUG
+        ReactionCyclicChangeDetector.shared.didSetObservable(ObjectIdentifier(self))
+        #endif
     }
     
      func remove(_ observer: IObserver) {
         os_unfair_lock_lock(&observersLock)
         observers[ObjectIdentifier(observer)] = nil
+        // TODO:
+        // what about the onCancel-callback?
         os_unfair_lock_unlock(&observersLock)
     }
 }
@@ -54,7 +61,7 @@ extension IObservable {
     
     private var value: Value {
         didSet {
-            didSetValue()
+            ObserverAdministrator.shared.didUpdate(observable: self)
         }
     }
     
@@ -69,9 +76,6 @@ extension IObservable {
         }
         set {
             value = newValue
-            #if DEBUG
-            ReactionCyclicChangeDetector.shared.didSetObservable(ObjectIdentifier(self))
-            #endif
         }
     }
     

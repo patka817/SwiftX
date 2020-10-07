@@ -14,9 +14,9 @@ import SwiftUI
 
  protocol IObserver: AnyObject {
     typealias OnCancelCallback = (Self) -> Void
-    var cancelled: Bool { get }
     var isObserving: Bool { get set }
     
+    func willUpdate()
     func updated()
     func cancel()
     func onCancel(_ closure: @escaping OnCancelCallback)
@@ -26,7 +26,6 @@ final internal class ObserverContext: IObserver {
     private var onCancelCallbacks = [OnCancelCallback]()
     var closure: (() -> Void)?
     var cancellable: AnyCancellable!
-    var cancelled: Bool { self.closure == nil }
     var isObserving = false
     
     init(closure: @escaping () -> Void) {
@@ -42,11 +41,14 @@ final internal class ObserverContext: IObserver {
         closure?()
     }
     
+    func willUpdate() { }
+    
     func cancel() {
         cancellable.cancel()
     }
     
     func onCancel(_ closure: @escaping OnCancelCallback) {
+        // TODO: might need to consider locking and not add if we'r cancelled...
         onCancelCallbacks.append(closure)
     }
 }

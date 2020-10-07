@@ -13,6 +13,7 @@ final internal class MutexLock {
         case normal
         case recursive
     }
+    
     private var _lock = pthread_mutex_t()
     
     init(type: MutexType = .normal) {

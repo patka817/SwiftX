@@ -33,17 +33,27 @@ public func computed<V>(_ computeClosure: @escaping () -> V) -> Computed<V> {
 public final class Computed<V>: DynamicProperty {
     internal var observers = [ObjectIdentifier : IObserver]()
     internal var observersLock = os_unfair_lock_s()
-    private var lock = os_unfair_lock_s()
-    private let computeFunc: () -> V
+    
+    internal var isObserving = false
+    
+    private var onCancelCallbacks = [OnCancelCallback]()
     private var cancellable: AnyCancellable?
     
+    private var lock = os_unfair_lock_s()
+    private let computeFunc: () -> V
+    
     private var _value: V?
-    var value: V {
+    public var value: V {
         get {
-            willGetValue()
+            willGetValue() // <--- adds observer to this if possible
             os_unfair_lock_lock(&lock)
             if _value == nil {
-                _value = computeFunc()
+                // We should NOT add observer here, an observer that
+                // wants to observe us should not start observing our
+                // our dependencies..
+                ObserverAdministrator.shared.runWithoutObserverContext {
+                    _value = computeFunc()
+                }
             }
             let value = _value!
             os_unfair_lock_unlock(&lock)
@@ -51,20 +61,15 @@ public final class Computed<V>: DynamicProperty {
         }
     }
     
-    init(_ computeFunc: @escaping () -> V) {
+    public init(_ computeFunc: @escaping () -> V) {
         self.computeFunc = computeFunc
-        var first = true
-        self.cancellable = ObserverAdministrator.shared.addReaction({
-            if first {
-                _ = computeFunc()
-                first = false
-            }
-        }, {
-            os_unfair_lock_lock(&self.lock)
-            self._value = nil
-            os_unfair_lock_unlock(&self.lock)
-            self.didSetValue()
-        }).cancellable
+        ObserverAdministrator
+            .shared
+            .addReaction(observer: self, computeFunc)
+        self.cancellable = AnyCancellable({ [weak self] in
+            guard let self = self else { return }
+            self.onCancelCallbacks.forEach({ $0(self) })
+        })
     }
     
     deinit {
@@ -73,3 +78,24 @@ public final class Computed<V>: DynamicProperty {
 }
 
 extension Computed: IObservable { }
+extension Computed: IObserver {
+    func willUpdate() {
+        // mark as stale is more efficient than counting dep's in admin?
+        scheduleObserversForUpdate()
+    }
+    
+    func updated() {
+        os_unfair_lock_lock(&self.lock)
+        self._value = nil
+        os_unfair_lock_unlock(&self.lock)
+    }
+    
+    func cancel() {
+        cancellable?.cancel()
+    }
+    
+    func onCancel(_ closure: @escaping OnCancelCallback) {
+        // TODO: might need to consider locking and not add if we'r cancelled...
+        onCancelCallbacks.append(closure)
+    }
+}
