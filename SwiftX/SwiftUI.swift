@@ -20,7 +20,7 @@ public struct ObserverView<V: View>: View {
     let disposer: CancellableDisposer
     let id = SwiftX.observerID
     
-    init(@ViewBuilder viewBuilder: @escaping () -> V) {
+    public init(@ViewBuilder viewBuilder: @escaping () -> V) {
         self.viewBuilder = viewBuilder
         let updater = UIUpdater()
         self.updater = updater
@@ -44,9 +44,9 @@ public struct ObserverView<V: View>: View {
 }
 
 public class StateProvider<State>: ObservableObject {
-    var state: State
+    public var state: State
     
-    init(_ state: State) {
+    public init(_ state: State) {
         self.state = state
     }
 }

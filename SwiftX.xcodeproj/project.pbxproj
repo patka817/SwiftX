@@ -14,6 +14,11 @@
 		1683C30B252E608000D69F19 /* ObserverAdministrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C300252E608000D69F19 /* ObserverAdministrator.swift */; };
 		1683C30D252E608000D69F19 /* SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C301252E608000D69F19 /* SwiftUI.swift */; };
 		1683C30F252E608000D69F19 /* Functions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C302252E608000D69F19 /* Functions.swift */; };
+		1683C36C252E66D100D69F19 /* TestAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C36B252E66D100D69F19 /* TestAppApp.swift */; };
+		1683C36E252E66D100D69F19 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C36D252E66D100D69F19 /* ContentView.swift */; };
+		1683C370252E66D200D69F19 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1683C36F252E66D200D69F19 /* Assets.xcassets */; };
+		1683C373252E66D200D69F19 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1683C372252E66D200D69F19 /* Preview Assets.xcassets */; };
+		1683C37B252E681700D69F19 /* SwiftX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16AE265E252E5E4500D5805C /* SwiftX.framework */; };
 		16AE2667252E5E4500D5805C /* SwiftX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16AE265E252E5E4500D5805C /* SwiftX.framework */; };
 		16AE266E252E5E4500D5805C /* SwiftXTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AE266D252E5E4500D5805C /* SwiftXTests.swift */; };
 /* End PBXBuildFile section */
@@ -37,6 +42,12 @@
 		1683C301252E608000D69F19 /* SwiftUI.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SwiftUI.swift; path = SwiftX/SwiftUI.swift; sourceTree = "<group>"; };
 		1683C302252E608000D69F19 /* Functions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Functions.swift; path = SwiftX/Functions.swift; sourceTree = "<group>"; };
 		1683C32A252E61AF00D69F19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = SwiftX/Info.plist; sourceTree = "<group>"; };
+		1683C369252E66D100D69F19 /* TestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1683C36B252E66D100D69F19 /* TestAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestAppApp.swift; sourceTree = "<group>"; };
+		1683C36D252E66D100D69F19 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1683C36F252E66D200D69F19 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1683C372252E66D200D69F19 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		1683C374252E66D200D69F19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		16AE2640252E5A2100D5805C /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		16AE2644252E5B8700D5805C /* libc++.1.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.1.tbd"; path = "usr/lib/libc++.1.tbd"; sourceTree = SDKROOT; };
 		16AE265E252E5E4500D5805C /* SwiftX.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftX.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -46,6 +57,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1683C366252E66D100D69F19 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1683C37B252E681700D69F19 /* SwiftX.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		16AE265B252E5E4500D5805C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -67,6 +86,7 @@
 		166D50622523C94A00A77B78 = {
 			isa = PBXGroup;
 			children = (
+				1683C36A252E66D100D69F19 /* TestApp */,
 				16AE265F252E5E4500D5805C /* SwiftX */,
 				16AE266C252E5E4500D5805C /* SwiftXTests */,
 				166D506C2523C94A00A77B78 /* Products */,
@@ -79,8 +99,29 @@
 			children = (
 				16AE265E252E5E4500D5805C /* SwiftX.framework */,
 				16AE2666252E5E4500D5805C /* SwiftXTests.xctest */,
+				1683C369252E66D100D69F19 /* TestApp.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1683C36A252E66D100D69F19 /* TestApp */ = {
+			isa = PBXGroup;
+			children = (
+				1683C36B252E66D100D69F19 /* TestAppApp.swift */,
+				1683C36D252E66D100D69F19 /* ContentView.swift */,
+				1683C36F252E66D200D69F19 /* Assets.xcassets */,
+				1683C374252E66D200D69F19 /* Info.plist */,
+				1683C371252E66D200D69F19 /* Preview Content */,
+			);
+			path = TestApp;
+			sourceTree = "<group>";
+		};
+		1683C371252E66D200D69F19 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				1683C372252E66D200D69F19 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 		16AE263F252E5A2000D5805C /* Frameworks */ = {
@@ -130,6 +171,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		1683C368252E66D100D69F19 /* TestApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1683C375252E66D200D69F19 /* Build configuration list for PBXNativeTarget "TestApp" */;
+			buildPhases = (
+				1683C365252E66D100D69F19 /* Sources */,
+				1683C366252E66D100D69F19 /* Frameworks */,
+				1683C367252E66D100D69F19 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TestApp;
+			productName = TestApp;
+			productReference = 1683C369252E66D100D69F19 /* TestApp.app */;
+			productType = "com.apple.product-type.application";
+		};
 		16AE265D252E5E4500D5805C /* SwiftX */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 16AE2676252E5E4500D5805C /* Build configuration list for PBXNativeTarget "SwiftX" */;
@@ -176,6 +234,9 @@
 				LastUpgradeCheck = 1170;
 				ORGANIZATIONNAME = "Patrik Karlsson";
 				TargetAttributes = {
+					1683C368252E66D100D69F19 = {
+						CreatedOnToolsVersion = 12.0.1;
+					};
 					16AE265D252E5E4500D5805C = {
 						CreatedOnToolsVersion = 12.0.1;
 						LastSwiftMigration = 1200;
@@ -200,11 +261,21 @@
 			targets = (
 				16AE265D252E5E4500D5805C /* SwiftX */,
 				16AE2665252E5E4500D5805C /* SwiftXTests */,
+				1683C368252E66D100D69F19 /* TestApp */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1683C367252E66D100D69F19 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1683C373252E66D200D69F19 /* Preview Assets.xcassets in Resources */,
+				1683C370252E66D200D69F19 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		16AE265C252E5E4500D5805C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -222,6 +293,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1683C365252E66D100D69F19 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1683C36E252E66D100D69F19 /* ContentView.swift in Sources */,
+				1683C36C252E66D100D69F19 /* TestAppApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		16AE265A252E5E4500D5805C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -368,6 +448,50 @@
 			};
 			name = Release;
 		};
+		1683C376252E66D200D69F19 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"TestApp/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = TestApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.patrikkarlsson.TestApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1683C377252E66D200D69F19 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "\"TestApp/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = TestApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.patrikkarlsson.TestApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		16AE2677252E5E4500D5805C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -473,6 +597,15 @@
 			buildConfigurations = (
 				166D507D2523C94B00A77B78 /* Debug */,
 				166D507E2523C94B00A77B78 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1683C375252E66D200D69F19 /* Build configuration list for PBXNativeTarget "TestApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1683C376252E66D200D69F19 /* Debug */,
+				1683C377252E66D200D69F19 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
