@@ -24,11 +24,11 @@ import SwiftUI
 
 final internal class ObserverContext: IObserver {
     private var onCancelCallbacks = [OnCancelCallback]()
-    var closure: (() -> Void)?
+    var closure: ((ObserverContext) -> Void)?
     var cancellable: AnyCancellable!
     var isObserving = false
     
-    init(closure: @escaping () -> Void) {
+    init(closure: @escaping (ObserverContext) -> Void) {
         self.closure = closure
         self.cancellable = AnyCancellable({ [weak self] in
             guard let self = self else { return }
@@ -38,7 +38,7 @@ final internal class ObserverContext: IObserver {
     }
     
     func updated() {
-        closure?()
+        closure?(self)
     }
     
     func willUpdate() { }

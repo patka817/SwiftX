@@ -16,6 +16,56 @@ class SwiftXTests: XCTestCase {
         state = AppState()
     }
 
+    func testTest() {
+        class Inner {
+            @Observable var price = 0
+        }
+
+        class Outer {
+            @Observable var inner = Inner()
+        }
+
+        let outer = Outer()
+
+        var exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 2
+
+        var read: Int?
+        let token = autorun {
+            print("PRICE IS \(outer.inner.price)")
+            read = outer.inner.price
+            exp.fulfill()
+        }
+
+        outer.inner.price = 666
+
+        wait(for: [exp], timeout: 1)
+        XCTAssert(read! == outer.inner.price)
+
+        exp = expectation(description: "")
+
+
+        outer.inner = {
+            let inner = Inner()
+            inner.price = -100
+            return inner
+        }()
+
+        wait(for: [exp], timeout: 100)
+        XCTAssert(read! == outer.inner.price)
+
+//        token.cancel()
+
+//        let exp2 = expectation(description: "")
+//        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+//            outer.inner.price = -666
+//            DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+//                exp2.fulfill()
+//            }
+//        }
+//        wait(for: [exp2], timeout: 5)
+    }
+
     func testCyclicGraphDependency() throws {
         // 1 - 2 - 3 - 1.
         // So:

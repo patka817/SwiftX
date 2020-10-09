@@ -30,9 +30,16 @@ final internal class ObserverAdministrator {
     private init() { }
     
     func addReaction<V>(_ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> ObserverContext {
-        let ctx = ObserverContext(closure: {
+        let ctx = ObserverContext(closure: { ourSelf in
+            // if we run this in a context, we get re-added as observer for "lost" props
+            // we are always run inside an update-loop, hence no need for locking!!
+            let prevCtx = self._currentObserverContext
+            self._currentObserverContext = ourSelf
+
             let dataInput = trackFunc()
             onChange(dataInput)
+
+            self._currentObserverContext = prevCtx
         })
         addReaction(observer: ctx, trackFunc)
         return ctx

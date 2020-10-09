@@ -20,9 +20,11 @@ extension IObservable {
      func willGetValue() {
         if let obs = ObserverAdministrator.shared.currentObserverContext {
             os_unfair_lock_lock(&observersLock)
-            observers[ObjectIdentifier(obs)] = obs
-            obs.onCancel(remove)
-            obs.isObserving = true
+            if observers[ObjectIdentifier(obs)] == nil {
+                observers[ObjectIdentifier(obs)] = obs
+                obs.onCancel(onObserverCancelled)
+                obs.isObserving = true
+            }
             #if DEBUG
             ReactionCyclicChangeDetector.shared.accessedObservable(ObjectIdentifier(self))
             #endif
@@ -41,12 +43,16 @@ extension IObservable {
         ReactionCyclicChangeDetector.shared.didSetObservable(ObjectIdentifier(self))
         #endif
     }
-    
-     func remove(_ observer: IObserver) {
+
+     func onObserverCancelled(_ observer: IObserver) {
         os_unfair_lock_lock(&observersLock)
         observers[ObjectIdentifier(observer)] = nil
-        // TODO:
-        // what about the onCancel-callback?
+        os_unfair_lock_unlock(&observersLock)
+    }
+
+    func removeAllObservers() {
+        os_unfair_lock_lock(&observersLock)
+        observers = [:]
         os_unfair_lock_unlock(&observersLock)
     }
 }
@@ -56,6 +62,7 @@ extension IObservable {
 // Should IObserver contain its dependencies (Observables)?
 
 @propertyWrapper public class Observable<Value>: IObservable {
+    // TODO: should really make observers weak???!!!!!! Got retain cycle now..??
     internal var observers = [ObjectIdentifier: IObserver]()
     internal var observersLock = os_unfair_lock_s()
     
@@ -68,6 +75,11 @@ extension IObservable {
     public init(wrappedValue: Value) {
         self.value = wrappedValue
     }
+
+    deinit {
+        print("deiniting, got \(observers.count) observers")
+
+    }
     
     public var wrappedValue: Value {
         get {
@@ -75,6 +87,9 @@ extension IObservable {
             return value
         }
         set {
+            if let value = value as? IObservable {
+                print("Old value have \(value.observers.count) observers")
+            }
             value = newValue
         }
     }

@@ -85,6 +85,7 @@ extension Computed: IObserver {
     }
     
     func updated() {
+        //TODO: solve "re-adding" of "lost" observations.. Like we did for reactions.. (== ObserverContext)
         os_unfair_lock_lock(&self.lock)
         self._value = nil
         os_unfair_lock_unlock(&self.lock)
