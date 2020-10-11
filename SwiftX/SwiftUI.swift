@@ -10,28 +10,24 @@ import Foundation
 import Combine
 import SwiftUI
 
-private struct SwiftX {
-    static var observerID = 0
-}
-
+// TODO: Test having @State in the supplied viewbuilder and make sure we
+// rerender when it triggers..
 public struct ObserverView<V: View>: View {
     private var viewBuilder: () -> V
-    @ObservedObject fileprivate var updater: UIUpdater
+    @ObservedObject fileprivate var updater: UIUpdater<V>
     let disposer: CancellableDisposer
     let id = SwiftX.observerID
     
     public init(@ViewBuilder viewBuilder: @escaping () -> V) {
         self.viewBuilder = viewBuilder
-        let updater = UIUpdater()
+        let updater = UIUpdater<V>()
         self.updater = updater
         
-        var first = true
         let ctx = ObserverAdministrator.shared.addReaction({
-            if first {
-                _ = viewBuilder()
-                first = false
-            }
-        }, { updater.objectWillChange.send() })
+            updater.content = viewBuilder()
+        }, {
+            updater.objectWillChange.send()
+        })
         self.disposer = CancellableDisposer(ctx.cancellable)
         
         SwiftX.observerID += 1
@@ -39,7 +35,7 @@ public struct ObserverView<V: View>: View {
    
     public var body: some View {
        print("(re)painting \(self.id)")
-       return viewBuilder()
+        return updater.content
    }
 }
 
@@ -51,4 +47,10 @@ public class StateProvider<State>: ObservableObject {
     }
 }
 
-private final class UIUpdater: ObservableObject, DynamicProperty { }
+private final class UIUpdater<V: View>: ObservableObject, DynamicProperty {
+    var content: V?
+}
+
+private struct SwiftX {
+    static var observerID = 0
+}

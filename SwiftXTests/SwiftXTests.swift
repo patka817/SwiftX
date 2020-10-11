@@ -13,7 +13,80 @@ class SwiftXTests: XCTestCase {
     var state: AppState!
     
     override func setUp() {
-        state = AppState()
+//        state = AppState()
+    }
+    
+    func testMoveObservedComputed() {
+        let parent = Node()
+        let left = Node()
+        parent.left = left
+            
+        let computed = Computed({ () -> String in
+            return "HEJ \(parent.left?.value ?? "nil")"
+        })
+        
+        var exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 2
+        var lastValue: String?
+        autorun {
+            lastValue = computed.value
+            print("Got \(computed.value)")
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1)
+        
+        // TODO: split them out?? We'r teseting too many different cases  here
+        
+        exp = expectation(description: "")
+        parent.left?.value = "666"
+        wait(for: [exp], timeout: 1)
+        XCTAssert(lastValue == "HEJ 666")
+        
+        inTransaction {
+            parent.right = parent.left
+            parent.left = nil
+        }
+        
+        exp = expectation(description: "")
+        wait(for: [exp], timeout: 1)
+        XCTAssert(lastValue == "HEJ nil")
+        
+        exp = expectation(description: "")
+        parent.right?.value = "HEJ"
+        wait(for: [exp], timeout: 1)
+        XCTAssert(lastValue == "HEJ nil")
+    }
+    
+    func testMoveObservedPropertyWrapper() {
+        let parent = Node()
+        var exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 2
+        autorun {
+            print("left value is \(String(describing: parent.left?.value))")
+            exp.fulfill()
+        }
+        
+        let leftChild = Node()
+        parent.left = leftChild
+        
+        wait(for: [exp], timeout: 1)
+        
+        exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 1
+        
+        inTransaction {
+            parent.right = parent.left
+            parent.left = nil
+        }
+        wait(for: [exp], timeout: 1)
+        
+        exp = expectation(description: "")
+        exp.isInverted = true
+        parent.right?.value = "tjillivippen"
+        
+        wait(for: [exp], timeout: 1)
+    }
     }
 
     func testTest() {

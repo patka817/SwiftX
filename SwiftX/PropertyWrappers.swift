@@ -10,26 +10,41 @@ import Foundation
 import SwiftUI
 import Combine
 
+struct Weak<T> {
+    private weak var _value: AnyObject?
+    var value: T? {
+        get { _value as? T }
+        set { _value = newValue as AnyObject }
+    }
+    
+    init(_ value: T) {
+        self.value = value
+    }
+}
+
 protocol IObservable: AnyObject {
     var observers: [ObjectIdentifier: IObserver] { get set }
     var observersLock: os_unfair_lock_s { get set }
+    
+    func onObserverCancelled(_ observer: IObserver)
 }
 
 extension IObservable {
-    // TODO: rename
+    // TODO: rename? or not..
      func willGetValue() {
         if let obs = ObserverAdministrator.shared.currentObserverContext {
             os_unfair_lock_lock(&observersLock)
-            if observers[ObjectIdentifier(obs)] == nil {
-                observers[ObjectIdentifier(obs)] = obs
-                obs.onCancel(onObserverCancelled)
-                obs.isObserving = true
-            }
+            observers[ObjectIdentifier(obs)] = obs
+            obs.didAccess(observable: self)
             #if DEBUG
             ReactionCyclicChangeDetector.shared.accessedObservable(ObjectIdentifier(self))
             #endif
             os_unfair_lock_unlock(&observersLock)
         }
+    }
+    
+    func didSetValue() {
+        ObserverAdministrator.shared.didUpdate(observable: self)
     }
     
      func scheduleObserversForUpdate() {
@@ -38,10 +53,6 @@ extension IObservable {
         let observers = self.observers
         os_unfair_lock_unlock(&observersLock)
         ObserverAdministrator.shared.scheduleForUpdates(observers: observers)
-        
-        #if DEBUG
-        ReactionCyclicChangeDetector.shared.didSetObservable(ObjectIdentifier(self))
-        #endif
     }
 
      func onObserverCancelled(_ observer: IObserver) {
@@ -68,7 +79,7 @@ extension IObservable {
     
     private var value: Value {
         didSet {
-            ObserverAdministrator.shared.didUpdate(observable: self)
+            didSetValue()
         }
     }
     

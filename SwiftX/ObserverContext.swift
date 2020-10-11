@@ -12,29 +12,67 @@ import SwiftUI
 
 // MARK: - Private
 
- protocol IObserver: AnyObject {
-    typealias OnCancelCallback = (Self) -> Void
+private var id = 0
+
+protocol IObserver: AnyObject {
     var isObserving: Bool { get set }
     
+    func didAccess(observable: IObservable)
     func willUpdate()
     func updated()
     func cancel()
-    func onCancel(_ closure: @escaping OnCancelCallback)
 }
 
 final internal class ObserverContext: IObserver {
-    private var onCancelCallbacks = [OnCancelCallback]()
+    private var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
     var closure: ((ObserverContext) -> Void)?
     var cancellable: AnyCancellable!
     var isObserving = false
+    private var _isTrackingRemovals = false
+    private var _observersAccessed = Set<ObjectIdentifier>()
+    
+    #if DEBUG
+    let observerID: Int = {
+        let obsID = id
+        id += 1
+        return obsID
+    }()
+    #endif
     
     init(closure: @escaping (ObserverContext) -> Void) {
         self.closure = closure
         self.cancellable = AnyCancellable({ [weak self] in
             guard let self = self else { return }
             self.closure = nil
-            self.onCancelCallbacks.forEach({ $0(self) })
+            self.observingObservables.forEach({ $0.value.value?.onObserverCancelled(self)
+            })
         })
+    }
+    
+    func startTrackingRemovals() {
+        _isTrackingRemovals = true
+    }
+    
+    func stopTrackingRemovals() {
+        _isTrackingRemovals = false
+        observingObservables.forEach({
+            if _observersAccessed.contains($0.key) == false {
+                $0.value.value?.onObserverCancelled(self)
+            }
+        })
+        _observersAccessed.removeAll() 
+    }
+    
+    func didAccess(observable: IObservable) {
+        let id = ObjectIdentifier(observable)
+        if observingObservables[id] == nil {
+            observingObservables[id] = Weak(observable)
+        }
+        
+        if _isTrackingRemovals {
+            _observersAccessed.insert(id)
+        }
+        isObserving = true
     }
     
     func updated() {
@@ -45,11 +83,6 @@ final internal class ObserverContext: IObserver {
     
     func cancel() {
         cancellable.cancel()
-    }
-    
-    func onCancel(_ closure: @escaping OnCancelCallback) {
-        // TODO: might need to consider locking and not add if we'r cancelled...
-        onCancelCallbacks.append(closure)
     }
 }
 

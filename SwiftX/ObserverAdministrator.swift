@@ -18,25 +18,27 @@ final internal class ObserverAdministrator {
     private var updatedObservables = [ObjectIdentifier: IObservable]()
     private var _hasScheduled = false
     
-    internal var currentObserverContext: (AnyObject & IObserver)? {
+    internal var currentObserverContext: IObserver? {
         get {
             transactionLock.inLock {
                 return _currentObserverContext
             }
         }
     }
-    internal var _currentObserverContext: (AnyObject & IObserver)?
+    internal var _currentObserverContext: IObserver?
     
     private init() { }
     
     func addReaction<V>(_ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> ObserverContext {
         let ctx = ObserverContext(closure: { ourSelf in
             // if we run this in a context, we get re-added as observer for "lost" props
-            // we are always run inside an update-loop, hence no need for locking!!
+            // We remove ourself from those we have accessed but aren't accessing in this run.
+            // (we are always run inside an update-loop, hence no need for locking)
             let prevCtx = self._currentObserverContext
             self._currentObserverContext = ourSelf
-
+            ourSelf.startTrackingRemovals()
             let dataInput = trackFunc()
+            ourSelf.stopTrackingRemovals()
             onChange(dataInput)
 
             self._currentObserverContext = prevCtx
@@ -66,6 +68,8 @@ final internal class ObserverAdministrator {
         assert(observer.isObserving, "ERROR Adding reaction but not observing changes!")
     }
     
+    // To prevent adding new observers for Computed observables..
+    // (Maybe Computed --> derivation?)
     func runWithoutObserverContext<V>(_ closure: () -> V) -> V {
         transactionLock.lock()
         let ctx = _currentObserverContext
@@ -97,6 +101,9 @@ final internal class ObserverAdministrator {
     func didUpdate(observable: IObservable) {
         inTransaction({
             updatedObservables[ObjectIdentifier(observable)] = observable
+            #if DEBUG
+            ReactionCyclicChangeDetector.shared.didSetObservable(ObjectIdentifier(observable))
+            #endif
         })
     }
     
@@ -138,7 +145,6 @@ final internal class ObserverAdministrator {
     
     
     private func _scheduleUpdate() {
-        transactionLock.lock()
         if _hasScheduled == false {
             _hasScheduled = true
             DispatchQueue.main.async {
@@ -153,7 +159,6 @@ final internal class ObserverAdministrator {
                 self.transactionLock.unlock()
             }
         }
-        transactionLock.unlock()
     }
     
     private func _resolveUpdatedObservers() {

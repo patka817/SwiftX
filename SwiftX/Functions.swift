@@ -36,7 +36,7 @@ public final class Computed<V>: DynamicProperty {
     
     internal var isObserving = false
     
-    private var onCancelCallbacks = [OnCancelCallback]()
+    private var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
     private var cancellable: AnyCancellable?
     
     private var lock = os_unfair_lock_s()
@@ -50,7 +50,12 @@ public final class Computed<V>: DynamicProperty {
             if _value == nil {
                 // We should NOT add observer here, an observer that
                 // wants to observe us should not start observing our
-                // our dependencies..
+                // own dependencies..
+                
+                // BUT, to solve the issue with moved props and
+                // we observe moved props we need to see that our "dep"
+                // are still the same or remove those we dont access anymore.
+                // TODO .....
                 ObserverAdministrator.shared.runWithoutObserverContext {
                     _value = computeFunc()
                 }
@@ -68,7 +73,8 @@ public final class Computed<V>: DynamicProperty {
             .addReaction(observer: self, computeFunc)
         self.cancellable = AnyCancellable({ [weak self] in
             guard let self = self else { return }
-            self.onCancelCallbacks.forEach({ $0(self) })
+            self.observingObservables.forEach({ $0.value.value?.onObserverCancelled(self)
+            })
         })
     }
     
@@ -80,7 +86,6 @@ public final class Computed<V>: DynamicProperty {
 extension Computed: IObservable { }
 extension Computed: IObserver {
     func willUpdate() {
-        // mark as stale is more efficient than counting dep's in admin?
         scheduleObserversForUpdate()
     }
     
@@ -95,8 +100,8 @@ extension Computed: IObserver {
         cancellable?.cancel()
     }
     
-    func onCancel(_ closure: @escaping OnCancelCallback) {
-        // TODO: might need to consider locking and not add if we'r cancelled...
-        onCancelCallbacks.append(closure)
+    func didAccess(observable: IObservable) {
+        observingObservables[ObjectIdentifier(observable)] = Weak(observable)
+        isObserving = true
     }
 }
