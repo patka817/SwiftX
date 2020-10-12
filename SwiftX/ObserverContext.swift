@@ -15,7 +15,11 @@ import SwiftUI
 private var id = 0
 
 protocol IObserver: AnyObject {
+    var observingObservables: [ObjectIdentifier: Weak<IObservable>] { get set }
     var isObserving: Bool { get set }
+    
+    var _isTrackingRemovals: Bool { get set }
+    var _observablesAccessed: Set<ObjectIdentifier> { get set }
     
     func didAccess(observable: IObservable)
     func willUpdate()
@@ -23,13 +27,42 @@ protocol IObserver: AnyObject {
     func cancel()
 }
 
+extension IObserver {
+    func startTrackingRemovals() {
+        _isTrackingRemovals = true
+    }
+    
+    func stopTrackingRemovals() {
+        _isTrackingRemovals = false
+        observingObservables.forEach({
+            if _observablesAccessed.contains($0.key) == false {
+                $0.value.value?.onObserverCancelled(self)
+            }
+        })
+        _observablesAccessed.removeAll()
+    }
+    
+    func didAccess(observable: IObservable) {
+        let id = ObjectIdentifier(observable)
+        if observingObservables[id] == nil {
+            observingObservables[id] = Weak(observable)
+        }
+        
+        if _isTrackingRemovals {
+            _observablesAccessed.insert(id)
+        }
+        isObserving = true
+    }
+    
+}
+
 final internal class ObserverContext: IObserver {
-    private var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
+    internal var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
     var closure: ((ObserverContext) -> Void)?
     var cancellable: AnyCancellable!
     var isObserving = false
-    private var _isTrackingRemovals = false
-    private var _observersAccessed = Set<ObjectIdentifier>()
+    internal var _isTrackingRemovals = false
+    internal var _observablesAccessed = Set<ObjectIdentifier>()
     
     #if DEBUG
     let observerID: Int = {
@@ -47,32 +80,6 @@ final internal class ObserverContext: IObserver {
             self.observingObservables.forEach({ $0.value.value?.onObserverCancelled(self)
             })
         })
-    }
-    
-    func startTrackingRemovals() {
-        _isTrackingRemovals = true
-    }
-    
-    func stopTrackingRemovals() {
-        _isTrackingRemovals = false
-        observingObservables.forEach({
-            if _observersAccessed.contains($0.key) == false {
-                $0.value.value?.onObserverCancelled(self)
-            }
-        })
-        _observersAccessed.removeAll() 
-    }
-    
-    func didAccess(observable: IObservable) {
-        let id = ObjectIdentifier(observable)
-        if observingObservables[id] == nil {
-            observingObservables[id] = Weak(observable)
-        }
-        
-        if _isTrackingRemovals {
-            _observersAccessed.insert(id)
-        }
-        isObserving = true
     }
     
     func updated() {

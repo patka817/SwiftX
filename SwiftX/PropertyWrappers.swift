@@ -98,9 +98,6 @@ extension IObservable {
             return value
         }
         set {
-            if let value = value as? IObservable {
-                print("Old value have \(value.observers.count) observers")
-            }
             value = newValue
         }
     }

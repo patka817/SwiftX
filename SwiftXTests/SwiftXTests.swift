@@ -13,49 +13,7 @@ class SwiftXTests: XCTestCase {
     var state: AppState!
     
     override func setUp() {
-//        state = AppState()
-    }
-    
-    func testMoveObservedComputed() {
-        let parent = Node()
-        let left = Node()
-        parent.left = left
-            
-        let computed = Computed({ () -> String in
-            return "HEJ \(parent.left?.value ?? "nil")"
-        })
-        
-        var exp = expectation(description: "")
-        exp.expectedFulfillmentCount = 2
-        var lastValue: String?
-        autorun {
-            lastValue = computed.value
-            print("Got \(computed.value)")
-            exp.fulfill()
-        }
-        
-        wait(for: [exp], timeout: 1)
-        
-        // TODO: split them out?? We'r teseting too many different cases  here
-        
-        exp = expectation(description: "")
-        parent.left?.value = "666"
-        wait(for: [exp], timeout: 1)
-        XCTAssert(lastValue == "HEJ 666")
-        
-        inTransaction {
-            parent.right = parent.left
-            parent.left = nil
-        }
-        
-        exp = expectation(description: "")
-        wait(for: [exp], timeout: 1)
-        XCTAssert(lastValue == "HEJ nil")
-        
-        exp = expectation(description: "")
-        parent.right?.value = "HEJ"
-        wait(for: [exp], timeout: 1)
-        XCTAssert(lastValue == "HEJ nil")
+        state = AppState()
     }
     
     func testMoveObservedPropertyWrapper() {
@@ -87,56 +45,65 @@ class SwiftXTests: XCTestCase {
         
         wait(for: [exp], timeout: 1)
     }
+    
+    func disabled_testCyclicDependencyDetector() {
+        autorun {
+            _ = self.state.count
+            self.state.count = 1
+        }
     }
-
-    func testTest() {
-        class Inner {
-            @Observable var price = 0
-        }
-
-        class Outer {
-            @Observable var inner = Inner()
-        }
-
-        let outer = Outer()
-
-        var exp = expectation(description: "")
+    
+    func testSettingStateInReaction() {
+        let exp = expectation(description: "")
         exp.expectedFulfillmentCount = 2
-
-        var read: Int?
-        let token = autorun {
-            print("PRICE IS \(outer.inner.price)")
-            read = outer.inner.price
+        reaction({
+            self.state.count
+        }, {
+            print("Got state \($0)")
+            self.state.greeting = "\($0)"
+        })
+        
+        reaction({
+            self.state.greeting
+        }, {
+            print("Got greeting " + $0)
+            exp.fulfill()
+        })
+        
+        state.greeting = "Zerooooo"
+        DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(100), execute: { self.state.count = 100 })
+    
+        wait(for: [exp], timeout: 1)
+        XCTAssert(state.greeting == "100")
+    }
+    
+    func testSettingStateInAutorun() {
+        let parent = Node()
+        parent.value = "Hej"
+        let exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 3
+        
+        var parentValueSeen: String?
+        autorun {
+            print(parent.value)
+            parentValueSeen = parent.value
             exp.fulfill()
         }
-
-        outer.inner.price = 666
-
-        wait(for: [exp], timeout: 1)
-        XCTAssert(read! == outer.inner.price)
-
-        exp = expectation(description: "")
-
-
-        outer.inner = {
-            let inner = Inner()
-            inner.price = -100
-            return inner
+        
+        let suffix = "is my lefty"
+        autorun {
+            print("left has value: \(parent.left?.value ?? "nil")")
+            parent.value = (parent.left?.value ?? "") + suffix
+        }
+        
+        parent.left = {
+            let l = Node()
+            l.value = "Lefty"
+            return l
         }()
-
-        wait(for: [exp], timeout: 100)
-        XCTAssert(read! == outer.inner.price)
-
-//        token.cancel()
-
-//        let exp2 = expectation(description: "")
-//        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
-//            outer.inner.price = -666
-//            DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
-//                exp2.fulfill()
-//            }
-//        }
-//        wait(for: [exp2], timeout: 5)
+        
+        wait(for: [exp], timeout: 1)
+        XCTAssert(parentValueSeen == ((parent.left?.value ?? "") + suffix))
     }
 
     func testCyclicGraphDependency() throws {
@@ -168,8 +135,58 @@ class SwiftXTests: XCTestCase {
         
         wait(for: [exp], timeout: 5)
     }
+    
+    func testUpdateReferenceType() {
+        let wrappedState = StateWrapper()
+        
+        var exp = expectation(description: "Should get new state")
+        var recValue: Int?
+        reaction({ wrappedState.state }, {
+            print("Got substate with count \($0.count)")
+            recValue = $0.count
+            exp.fulfill()
+        })
+        
+        let new = AppState()
+        new.count = 666
+        wrappedState.state = new
+        
+        wait(for: [exp], timeout: 1)
+        
+        exp = expectation(description: "Should get new state")
+        wrappedState.state.count = 1000
+        
+        wait(for: [exp], timeout: 1)
+        XCTAssert(recValue == new.count)
+    }
+    
+    func testUpdateSubReferenceTypeAndListenToSubReferenceObservableValue() {
+        let wrappedState = StateWrapper()
+        wrappedState.state.count = 1000
+        
+        var exp = expectation(description: "Should get new state")
+        var recValue: Int?
+        
+        reaction({ wrappedState.state.count }, {
+            recValue = $0
+            exp.fulfill()
+        })
+        
+        let new = AppState()
+        new.count = 666
+        wrappedState.state = new
+        
+        wait(for: [exp], timeout: 1)
+        XCTAssert(recValue == new.count, "Should get updated count since we access count through the wrappedState (making autorun observable to both state and count)")
+        
+        exp = expectation(description: "Waiting for -1..")
+        wrappedState.state.count = -1
+        
+        wait(for: [exp], timeout: 1)
+        XCTAssert(recValue == -1, "Failed to get updated count after setting new reference-object :(")
+    }
 
-    func testUpdateOneValueInLongChainOfDep() {
+    func testUpdateOneValueTypeInLongChainOfDep() {
         var comps = [Computed<Int>]()
         var compFunc: () -> Int = { self.state.count }
         for _ in 1...20 {
@@ -193,10 +210,10 @@ class SwiftXTests: XCTestCase {
         
     }
     
-    func testPerfomanceUpdateOneValueInLongChainOfDep() {
+    func testPerfomanceUpdateOneValueTypeInLongChainOfDep() {
         var comps = [Computed<Int>]()
         var compFunc: () -> Int = { self.state.count }
-        for _ in 1...20 {
+        for _ in 1...100 {
             let comp = Computed(compFunc)
             comps.append(comp)
             compFunc = { comp.value }
@@ -211,13 +228,19 @@ class SwiftXTests: XCTestCase {
         measure {
             exp = expectation(description: "Should reach last fast")
             exp?.assertForOverFulfill = true
+            let newValue = Int.random(in: 0...100)
             inTransaction {
-                state.count = 4
+                state.count = newValue
             }
             wait(for: [exp!], timeout: 5)
+            XCTAssert(comps.last!.value == newValue)
         }
     }
 
+}
+
+struct StateWrapper {
+    @Observable var state = AppState()
 }
 
 class AppState {
@@ -227,6 +250,8 @@ class AppState {
     @Observable var nilable: String? = nil
     @Observable var testTrigger = false
     
+    @Observable var arr = [1, 2]
+    
     private var _id: ObjectIdentifier?
     var id: ObjectIdentifier {
         if _id == nil {
@@ -234,4 +259,10 @@ class AppState {
         }
         return _id!
     }
+}
+
+class Node {
+    @Observable var left: Node?
+    @Observable var right: Node?
+    @Observable var value = ""
 }

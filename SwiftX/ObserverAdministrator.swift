@@ -31,9 +31,16 @@ final internal class ObserverAdministrator {
     
     func addReaction<V>(_ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> ObserverContext {
         let ctx = ObserverContext(closure: { ourSelf in
-            // if we run this in a context, we get re-added as observer for "lost" props
-            // We remove ourself from those we have accessed but aren't accessing in this run.
+            // if we run this in a context, we get re-added as observer for "lost" props.
+            // We remove ourself from those we have accessed but aren't accessing in this run (so we dont get updated if e.g. moved observables is updated).
             // (we are always run inside an update-loop, hence no need for locking)
+            #if DEBUG
+            if self.transactionLock.tryLock() == false {
+                assertionFailure("RUNNING UPDATE IN NON-TRANSACTION ?!?!")
+            } else {
+                self.transactionLock.unlock()
+            }
+            #endif
             let prevCtx = self._currentObserverContext
             self._currentObserverContext = ourSelf
             ourSelf.startTrackingRemovals()
@@ -95,7 +102,7 @@ final internal class ObserverAdministrator {
         }
     }
     
-    // "Mark" this observable as change in the current transaction (or the new one created by the admin).
+    // "Mark" this observable as changed in the current transaction (or the new one created).
     // This makes us track only outside-changes so we can propagate updates when all are done in the wrapped transaction.
     // If a change is done without transaction we get one here anyway, and will thus have the correct behaviour.
     func didUpdate(observable: IObservable) {
@@ -129,13 +136,14 @@ final internal class ObserverAdministrator {
     //    then it hasn't updated itself but will, so all it's observers
     //    will be dependent on it and then we need a dependency count
     //    of 1.
-    private func _scheduleForUpdates(observers: [ObjectIdentifier: IObserver], startDependencyCount: Int = 0) {
+    // OR?!?!?! Seems to work with 0 as start, always........... hmmm
+    private func _scheduleForUpdates(observers: [ObjectIdentifier: IObserver]) {
         assert(updatedObservables.isEmpty == false)
         observers.forEach({
             if let prevDepCount = self.pendingUpdatesDependencyCount[$0.key] {
                 self.pendingUpdatesDependencyCount[$0.key] = prevDepCount + 1
             } else {
-                self.pendingUpdatesDependencyCount[$0.key] = startDependencyCount
+                self.pendingUpdatesDependencyCount[$0.key] = 0
             }
             
             self.pendingUpdateList.append($0.value)
@@ -166,7 +174,7 @@ final internal class ObserverAdministrator {
         print("Updated \(updatedObservables.count) observables")
         #endif
         for observable in updatedObservables {
-            _scheduleForUpdates(observers: observable.value.observers, startDependencyCount: 0)
+            _scheduleForUpdates(observers: observable.value.observers)
         }
         updatedObservables = [:]
     }

@@ -35,9 +35,10 @@ public final class Computed<V>: DynamicProperty {
     internal var observersLock = os_unfair_lock_s()
     
     internal var isObserving = false
-    
-    private var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
+    internal var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
     private var cancellable: AnyCancellable?
+    internal var _observablesAccessed = Set<ObjectIdentifier>()
+    internal var _isTrackingRemovals = false
     
     private var lock = os_unfair_lock_s()
     private let computeFunc: () -> V
@@ -55,9 +56,12 @@ public final class Computed<V>: DynamicProperty {
                 // BUT, to solve the issue with moved props and
                 // we observe moved props we need to see that our "dep"
                 // are still the same or remove those we dont access anymore.
-                // TODO .....
                 ObserverAdministrator.shared.runWithoutObserverContext {
+                    ObserverAdministrator.shared._currentObserverContext = self
+                    startTrackingRemovals() // MAKE TEST FOR THIS
                     _value = computeFunc()
+                    stopTrackingRemovals()
+                    ObserverAdministrator.shared._currentObserverContext = nil
                 }
             }
             let value = _value!
@@ -85,12 +89,11 @@ public final class Computed<V>: DynamicProperty {
 
 extension Computed: IObservable { }
 extension Computed: IObserver {
-    func willUpdate() {
+    func willUpdate() { // Always called inTransaction???? -> schedule can be made without the lock..
         scheduleObserversForUpdate()
     }
     
     func updated() {
-        //TODO: solve "re-adding" of "lost" observations.. Like we did for reactions.. (== ObserverContext)
         os_unfair_lock_lock(&self.lock)
         self._value = nil
         os_unfair_lock_unlock(&self.lock)
@@ -98,10 +101,5 @@ extension Computed: IObserver {
     
     func cancel() {
         cancellable?.cancel()
-    }
-    
-    func didAccess(observable: IObservable) {
-        observingObservables[ObjectIdentifier(observable)] = Weak(observable)
-        isObserving = true
     }
 }

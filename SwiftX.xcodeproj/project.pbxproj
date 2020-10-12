@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1662FDF02534F642004E6272 /* CollectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662FDEF2534F642004E6272 /* CollectionTests.swift */; };
+		1662FDF52534F689004E6272 /* ComputedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662FDF42534F689004E6272 /* ComputedTests.swift */; };
 		1683C304252E608000D69F19 /* PropertyWrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C2FC252E608000D69F19 /* PropertyWrappers.swift */; };
 		1683C305252E608000D69F19 /* SwiftX.h in Headers */ = {isa = PBXBuildFile; fileRef = 1683C2FD252E608000D69F19 /* SwiftX.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1683C307252E608000D69F19 /* ObserverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C2FE252E608000D69F19 /* ObserverContext.swift */; };
@@ -34,6 +36,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1662FDEF2534F642004E6272 /* CollectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionTests.swift; sourceTree = "<group>"; };
+		1662FDF42534F689004E6272 /* ComputedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputedTests.swift; sourceTree = "<group>"; };
 		1683C2FC252E608000D69F19 /* PropertyWrappers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PropertyWrappers.swift; path = SwiftX/PropertyWrappers.swift; sourceTree = "<group>"; };
 		1683C2FD252E608000D69F19 /* SwiftX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SwiftX.h; path = SwiftX/SwiftX.h; sourceTree = "<group>"; };
 		1683C2FE252E608000D69F19 /* ObserverContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ObserverContext.swift; path = SwiftX/ObserverContext.swift; sourceTree = "<group>"; };
@@ -153,6 +157,8 @@
 			children = (
 				16AE266D252E5E4500D5805C /* SwiftXTests.swift */,
 				16AE266F252E5E4500D5805C /* Info.plist */,
+				1662FDEF2534F642004E6272 /* CollectionTests.swift */,
+				1662FDF42534F689004E6272 /* ComputedTests.swift */,
 			);
 			path = SwiftXTests;
 			sourceTree = "<group>";
@@ -319,7 +325,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1662FDF52534F689004E6272 /* ComputedTests.swift in Sources */,
 				16AE266E252E5E4500D5805C /* SwiftXTests.swift in Sources */,
+				1662FDF02534F642004E6272 /* CollectionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
