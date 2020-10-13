@@ -12,9 +12,8 @@ import SwiftUI
 
 // MARK: - Private
 
-private var id = 0
 
-protocol IObserver: AnyObject {
+internal protocol IObserver: AnyObject {
     var observingObservables: [ObjectIdentifier: Weak<IObservable>] { get set }
     var isObserving: Bool { get set }
     
@@ -31,17 +30,19 @@ extension IObserver {
     func startTrackingRemovals() {
         _isTrackingRemovals = true
     }
-    
+
     func stopTrackingRemovals() {
         _isTrackingRemovals = false
-        observingObservables.forEach({
+        observingObservables = observingObservables.filter({
             if _observablesAccessed.contains($0.key) == false {
                 $0.value.value?.onObserverCancelled(self)
+                return false
             }
+            return true
         })
         _observablesAccessed.removeAll()
     }
-    
+
     func didAccess(observable: IObservable) {
         let id = ObjectIdentifier(observable)
         if observingObservables[id] == nil {
@@ -63,14 +64,6 @@ final internal class ObserverContext: IObserver {
     var isObserving = false
     internal var _isTrackingRemovals = false
     internal var _observablesAccessed = Set<ObjectIdentifier>()
-    
-    #if DEBUG
-    let observerID: Int = {
-        let obsID = id
-        id += 1
-        return obsID
-    }()
-    #endif
     
     init(closure: @escaping (ObserverContext) -> Void) {
         self.closure = closure

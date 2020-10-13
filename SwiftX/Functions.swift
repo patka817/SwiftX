@@ -58,7 +58,7 @@ public final class Computed<V>: DynamicProperty {
                 // are still the same or remove those we dont access anymore.
                 ObserverAdministrator.shared.runWithoutObserverContext {
                     ObserverAdministrator.shared._currentObserverContext = self
-                    startTrackingRemovals() // MAKE TEST FOR THIS
+                    startTrackingRemovals()
                     _value = computeFunc()
                     stopTrackingRemovals()
                     ObserverAdministrator.shared._currentObserverContext = nil
