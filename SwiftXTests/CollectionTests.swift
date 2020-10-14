@@ -39,7 +39,7 @@ class CollectionTests: XCTestCase {
         let t = T()
         
         let exp = expectation(description: "")
-        exp.expectedFulfillmentCount = 2
+        exp.expectedFulfillmentCount = 3
         var recValue: [String: Int]?
         autorun {
             print("T.dictionary: \(t.dictionary)")

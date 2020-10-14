@@ -16,6 +16,79 @@ class SwiftXTests: XCTestCase {
         state = AppState()
     }
     
+    func testOrderOfExecutionAndEnsureOneRunOnly() {
+        // Create dep. graph like:
+        // firstName <-- [autorun, fullname]
+        // lastName <-- [fullName]
+        // fullName <-- [autorun]
+        struct Person {
+            @Observable var firstName = ""
+            @Observable var lastName = ""
+            var fullName: Computed<String>!
+            
+            internal init() {
+                self.fullName = Computed({ [self] in
+                    print("COMPUTING")
+                    return "\(self.firstName) \(self.lastName)"
+                })
+            }
+        }
+        
+        let person = Person()
+        person.firstName = "Kalle"
+        person.lastName = "Anka"
+        
+        var exp = expectation(description: "")
+        autorun {
+            print("firstname is \(person.firstName)")
+            print("fullname is \(person.fullName.value)")
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1)
+        
+        exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 1
+        exp.assertForOverFulfill = true
+        person.firstName = "Fnatte"
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func testConditionalObservingAutorun() {
+        struct MessagePrint {
+            @Observable var print = true
+            @Observable var message: String?
+        }
+        let msgPrint = MessagePrint()
+        
+        var exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 2
+        var lastPrintedMessage: String? = nil
+        autorun {
+            if msgPrint.print {
+                lastPrintedMessage = msgPrint.message
+                print(msgPrint.message)
+            }
+            exp.fulfill()
+        }
+        
+        msgPrint.message = "hej"
+        wait(for: [exp], timeout: 1)
+        XCTAssert(lastPrintedMessage == msgPrint.message)
+        
+        exp = expectation(description: "")
+        msgPrint.print = false
+        wait(for: [exp], timeout: 1)
+        XCTAssert(lastPrintedMessage == "hej")
+        
+        // Verify that we are cut of the branch with (== not observing) message-observable
+        exp = expectation(description: "")
+        exp.isInverted = true
+        msgPrint.message = "Hello, world!"
+        wait(for: [exp], timeout: 1)
+        XCTAssert(lastPrintedMessage == "hej")
+    }
+    
     func testMoveObservedPropertyWrapper() {
         let parent = Node()
         var exp = expectation(description: "")
@@ -85,25 +158,24 @@ class SwiftXTests: XCTestCase {
         
         var parentValueSeen: String?
         autorun {
+            print("***** AUTORUN ACCESSING PARENT:VALUE *******")
             print(parent.value)
             parentValueSeen = parent.value
             exp.fulfill()
         }
         
-        let suffix = "is my lefty"
         autorun {
+            print("***** AUTORUN READING LEFT.VALUE AND SETTING PARENT.VALUE ******")
             print("left has value: \(parent.left?.value ?? "nil")")
-            parent.value = (parent.left?.value ?? "") + suffix
+            parent.value = parent.left?.value ?? "nil"
         }
-        
-        parent.left = {
-            let l = Node()
-            l.value = "Lefty"
-            return l
-        }()
+    
+        let l = Node()
+        l.value = "Lefty"
+        parent.left = l
         
         wait(for: [exp], timeout: 1)
-        XCTAssert(parentValueSeen == ((parent.left?.value ?? "") + suffix))
+        XCTAssert(parentValueSeen == (parent.left?.value ?? ""))
     }
 
     func testCyclicGraphDependency() throws {
@@ -229,9 +301,7 @@ class SwiftXTests: XCTestCase {
             exp = expectation(description: "Should reach last fast")
             exp?.assertForOverFulfill = true
             let newValue = Int.random(in: 0...100)
-            inTransaction {
-                state.count = newValue
-            }
+            state.count = newValue
             wait(for: [exp!], timeout: 5)
             XCTAssert(comps.last!.value == newValue)
         }

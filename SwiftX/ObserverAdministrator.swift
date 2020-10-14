@@ -43,11 +43,14 @@ final internal class ObserverAdministrator {
             #endif
             let prevCtx = self._currentObserverContext
             self._currentObserverContext = ourSelf
+            ReactionCyclicChangeDetector.beginTracking()
+            
             ourSelf.startTrackingRemovals()
             let dataInput = trackFunc()
             ourSelf.stopTrackingRemovals()
             onChange(dataInput)
 
+            ReactionCyclicChangeDetector.doneTracking()
             self._currentObserverContext = prevCtx
         })
         addReaction(observer: ctx, trackFunc)
@@ -56,22 +59,17 @@ final internal class ObserverAdministrator {
     
     func addReaction<V, O: IObserver>(observer: O, _ trackFunc: @escaping () -> V) {
         transactionLock.lock()
-        #if DEBUG
-        ReactionCyclicChangeDetector.shared.clear()
-        #endif
         let prevCtx = _currentObserverContext
+        
+        ReactionCyclicChangeDetector.beginTracking()
         
         _currentObserverContext = observer
         _ = trackFunc()
         _currentObserverContext = prevCtx
         
-        #if DEBUG
-        assert(ReactionCyclicChangeDetector.shared.isCyclic == false, "Setting and getting the same property in a reaction is not allowed and will create an infinite loop")
-        ReactionCyclicChangeDetector.shared.clear()
-        #endif
+        ReactionCyclicChangeDetector.doneTracking()
         
         transactionLock.unlock()
-        
         assert(observer.isObserving, "ERROR Adding reaction but not observing changes!")
     }
     
@@ -95,8 +93,12 @@ final internal class ObserverAdministrator {
             let value = transaction()
             
             if isFirstTransaction {
-                _inTransaction = false
                 _scheduleUpdate()
+                // Set the intransaction AFTER we run updates..
+                // otherwise we might trigger something
+                // in scheduleUpdate which re-enters transaction
+                // which then thinks it is the first transaction..
+                _inTransaction = false
             }
             return value
         }
@@ -109,21 +111,21 @@ final internal class ObserverAdministrator {
         inTransaction({
             updatedObservables[ObjectIdentifier(observable)] = observable
             #if DEBUG
-            ReactionCyclicChangeDetector.shared.didSetObservable(ObjectIdentifier(observable))
+            ReactionCyclicChangeDetector.current.didSetObservable(ObjectIdentifier(observable))
             #endif
         })
     }
     
     func scheduleForUpdates(observers: [ObjectIdentifier: IObserver]) {
-        // Track observers-to-update until last transaction is done
-        // this won't work for the case were we change one observable
-        //  multiple times in one transaction (or nested ...)
         // When exiting the last, we do this update thingy and schedule for update.
         // It should be sufficient to only track observers-to-update uniquely (we don't need to store dep. count yet then).
-        inTransaction {
-            _scheduleForUpdates(observers: observers)
-            // TODO: I think we can use _update always?? Right now we only get here in _resolveUpdatedObservers ???
+        #if DEBUG
+        if transactionLock.tryLock() == false {
+            assertionFailure()
         }
+        transactionLock.unlock()
+        #endif
+        _scheduleForUpdates(observers: observers)
     }
     
     // Two cases here which determines the startDependencyCount..
@@ -153,20 +155,33 @@ final internal class ObserverAdministrator {
     
     
     private func _scheduleUpdate() {
-        if _hasScheduled == false {
-            _hasScheduled = true
-            DispatchQueue.main.async {
-                self.transactionLock.lock()
+        // Not sure if we should run async or not..
+        // Pro's running sync is that changes happen directly
+        // which is easier to debug and reason about.
+        // But it might affect perfomance? Might cause
+        // issues in UI? And unable to guarentee what thread we run all closures on..
+        // Need to investigate it..
+        
+        // If we run async we can "accidentally" batch updates
+        // (two updates to observables after each other).
+        // And we can guarentee mainthread on callbacks..
+        // Might cost more (or less?) in terms of perfomance?
+        // Can be harder to debug/reason..
+        
+//        if _hasScheduled == false {
+//            _hasScheduled = true
+//            DispatchQueue.main.async {
+//                self.transactionLock.lock()
                 
                 while self.updatedObservables.isEmpty == false {
                     self._resolveUpdatedObservers()
                     self._updateCurrentObservers()
                 }
                 
-                self._hasScheduled = false
-                self.transactionLock.unlock()
-            }
-        }
+//                self._hasScheduled = false
+//                self.transactionLock.unlock()
+//            }
+//        }
     }
     
     private func _resolveUpdatedObservers() {
@@ -182,7 +197,7 @@ final internal class ObserverAdministrator {
     private func _updateCurrentObservers() {
         print("\(pendingUpdateList.count) observers to update")
         let uniques = Set(pendingUpdateList.map({ ObjectIdentifier($0) }))
-        print("\(uniques.count)) unique observers to update")
+        print("\(uniques.count)) unique observers to update: \(uniques.map({ "\($0)" }).joined(separator: ", "))")
         
         for observer in pendingUpdateList {
             let id = ObjectIdentifier(observer)
@@ -194,7 +209,7 @@ final internal class ObserverAdministrator {
             
             if depCount <= 0 {
                 print("depCount is \(depCount) => update-time!")
-                observer.updated()
+                observer.updated() // need to run on main..!?
             } else {
                 print("depCount is \(depCount) => decremented rerun later")
                 depCount -= 1
@@ -213,7 +228,18 @@ final internal class ReactionCyclicChangeDetector {
     private var accessedObservables = Set<ObjectIdentifier>()
     private var settedObservables = Set<ObjectIdentifier>()
     
-    static var shared = ReactionCyclicChangeDetector()
+    static var current = ReactionCyclicChangeDetector()
+    static private var lastCurrent: ReactionCyclicChangeDetector?
+    
+    static func beginTracking() {
+        lastCurrent = current
+        current = ReactionCyclicChangeDetector()
+    }
+    
+    static func doneTracking() {
+        assert(current.isCyclic == false)
+        current = lastCurrent ?? ReactionCyclicChangeDetector()
+    }
     
     private init() { }
     
@@ -221,18 +247,21 @@ final internal class ReactionCyclicChangeDetector {
         !accessedObservables.isDisjoint(with: settedObservables)
     }
     
+    var objectIdBothAccessedAndSet: ObjectIdentifier? {
+        accessedObservables.first(where: { settedObservables.contains($0) })
+    }
+    
+    // TODO fix when autorun trigger another autorun by setting an observable  value that the other autorun listens to...
     func accessedObservable(_ objectId: ObjectIdentifier) {
+        guard ObserverAdministrator.shared._currentObserverContext != nil else { return }
         accessedObservables.insert(objectId)
+        assert(isCyclic == false, "cyclic dependency detected for ObjectId \(objectId)")
     }
     
     func didSetObservable(_ objectId: ObjectIdentifier) {
+        guard ObserverAdministrator.shared._currentObserverContext != nil else { return }
         settedObservables.insert(objectId)
+        assert(isCyclic == false, "cyclic dependency detected for ObjectId \(objectId)")
     }
-    
-    func clear() {
-        accessedObservables.removeAll()
-        settedObservables.removeAll()
-    }
-    
 }
 #endif

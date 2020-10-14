@@ -35,11 +35,11 @@ extension IObservable {
         if let obs = ObserverAdministrator.shared.currentObserverContext {
             os_unfair_lock_lock(&observersLock)
             observers[ObjectIdentifier(obs)] = obs
+            os_unfair_lock_unlock(&observersLock)
             obs.didAccess(observable: self)
             #if DEBUG
-            ReactionCyclicChangeDetector.shared.accessedObservable(ObjectIdentifier(self))
+            ReactionCyclicChangeDetector.current.accessedObservable(ObjectIdentifier(self))
             #endif
-            os_unfair_lock_unlock(&observersLock)
         }
     }
     
@@ -60,12 +60,6 @@ extension IObservable {
         observers[ObjectIdentifier(observer)] = nil
         os_unfair_lock_unlock(&observersLock)
     }
-
-    func removeAllObservers() {
-        os_unfair_lock_lock(&observersLock)
-        observers = [:]
-        os_unfair_lock_unlock(&observersLock)
-    }
 }
 
 // MARK: - PropertyWrapper
@@ -73,7 +67,6 @@ extension IObservable {
 // Should IObserver contain its dependencies (Observables)?
 
 @propertyWrapper public class Observable<Value>: IObservable {
-    // TODO: should really make observers weak???!!!!!! Got retain cycle now..??
     internal var observers = [ObjectIdentifier: IObserver]()
     internal var observersLock = os_unfair_lock_s()
     
