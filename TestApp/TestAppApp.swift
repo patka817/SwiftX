@@ -16,6 +16,7 @@ struct TestAppApp: App {
             ContentView()
                 .environmentObject(StateProvider(AppState()))
                 .environmentObject(EnvAppState())
+                .environmentObject(StateProvider(PublishedState()))
         }
     }
 }
@@ -31,6 +32,10 @@ class AppState {
 }
 
 class EnvAppState: ObservableObject {
+    @Published var count = 0
+}
+
+class PublishedState {
     @Published var count = 0
 }
 

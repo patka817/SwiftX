@@ -43,14 +43,19 @@ final internal class ObserverAdministrator {
             #endif
             let prevCtx = self._currentObserverContext
             self._currentObserverContext = ourSelf
+            
+            #if DEBUG
             ReactionCyclicChangeDetector.beginTracking()
+            #endif
             
             ourSelf.startTrackingRemovals()
             let dataInput = trackFunc()
             ourSelf.stopTrackingRemovals()
             onChange(dataInput)
-
+            
+            #if DEBUG
             ReactionCyclicChangeDetector.doneTracking()
+            #endif
             self._currentObserverContext = prevCtx
         })
         addReaction(observer: ctx, trackFunc)
@@ -61,14 +66,17 @@ final internal class ObserverAdministrator {
         transactionLock.lock()
         let prevCtx = _currentObserverContext
         
+        #if DEBUG
         ReactionCyclicChangeDetector.beginTracking()
+        #endif
         
         _currentObserverContext = observer
         _ = trackFunc()
         _currentObserverContext = prevCtx
         
+        #if DEBUG
         ReactionCyclicChangeDetector.doneTracking()
-        
+        #endif 
         transactionLock.unlock()
         assert(observer.isObserving, "ERROR Adding reaction but not observing changes!")
     }

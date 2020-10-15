@@ -23,13 +23,11 @@ public struct ObserverView<V: View>: View {
         let updater = UIUpdater<V>()
         self.updater = updater
         
-        let ctx = ObserverAdministrator.shared.addReaction({
+        let cancel = autorun {
             updater.content = viewBuilder()
-        }, {
             updater.objectWillChange.send()
-        })
-        self.disposer = CancellableDisposer(ctx.cancellable)
-        
+        }
+        self.disposer = CancellableDisposer(cancel)
         SwiftX.observerID += 1
     }
    

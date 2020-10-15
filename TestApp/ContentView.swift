@@ -29,9 +29,11 @@ struct EmptyDebugView: View {
 
 struct CounterView: View {
     @EnvironmentObject var stateProvider: StateProvider<AppState>
+    @EnvironmentObject var publishedStateProvider: StateProvider<PublishedState>
     @EnvironmentObject var envState: EnvAppState
     var state: AppState { stateProvider.state }
     @Binding var count: Int
+    @State var text = ""
     
     var body: some View {
 //        ObserverView {
@@ -43,21 +45,37 @@ struct CounterView: View {
 //            Text("Count: \(self.count)")
 //            Text("Count: \(self.envState.count)")
 //            Text("Count: \(self.state.count)")
-            ObserverView { Text("Count: \(self.state.count)") }
+//            CounterLabel()
+            ObserverView {
+                Text("Count: \(self.state.count)")
+            }
             HStack {
                 Button(action: {
 //                    self.envState.count += 1
 //                    self.count += 1
                     self.state.count += 1
+//                    self.publishedStateProvider.state.count += 1
                 }, label: { Text("+") })
                 Button(action: {
 //                    self.envState.count -= 1
 //                    self.count -= 1
                     self.state.count -= 1
+//                    self.publishedStateProvider.state.count -= 1
                 }, label: { Text("-") })
             }
         }
 //        }
+    }
+}
+
+struct CounterLabel: View {
+    @EnvironmentObject var publishedStateProvider: StateProvider<PublishedState>
+    @State var publishedCount = 0
+    
+    var body: some View {
+        Text("Count: \(self.publishedCount)")
+            .onReceive(publishedStateProvider.state.$count, perform: { self.publishedCount = $0
+            })
     }
 }
 
