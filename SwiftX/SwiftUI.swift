@@ -10,8 +10,6 @@ import Foundation
 import Combine
 import SwiftUI
 
-// TODO: Test having @State in the supplied viewbuilder and make sure we
-// rerender when it triggers..
 public struct ObserverView<V: View>: View {
     private var viewBuilder: () -> V
     @ObservedObject fileprivate var updater: UIUpdater<V>
@@ -37,7 +35,7 @@ public struct ObserverView<V: View>: View {
    }
 }
 
-public class StateProvider<State>: ObservableObject {
+public final class StateProvider<State>: ObservableObject {
     public var state: State
     
     public init(_ state: State) {

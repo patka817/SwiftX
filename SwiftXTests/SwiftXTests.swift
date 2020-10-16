@@ -16,6 +16,141 @@ class SwiftXTests: XCTestCase {
         state = AppState()
     }
     
+    // TODO: MOVE CODABLE / ACCESS TESTS TO SEPERATE FILE
+    
+    func testAccessPerfomance() {
+        class Pirate: Codable {
+            @Observable var greeting = "Arr!"
+            @Observable var legs = 2
+            @Observable var children = [Pirate]()
+        }
+        
+        var pirate = Pirate()
+        for i in 1...50 {
+            let child = Pirate()
+            child.greeting = "oh-hoy"
+            child.legs = i
+            pirate.children.append(child)
+            if [10, 20, 30, 40].contains(i) {
+                pirate = child
+            }
+        }
+        measure {
+            try! AccessEncoder().accessProperties(in: pirate)
+        }
+    }
+    
+    func testJSONPerfomance() {
+        class Pirate: Codable {
+            @Observable var greeting = "Arr!"
+            @Observable var legs = 2
+            @Observable var children = [Pirate]()
+        }
+        
+        var pirate = Pirate()
+        for i in 1...50 {
+            let child = Pirate()
+            child.greeting = "oh-hoy"
+            child.legs = i
+            pirate.children.append(child)
+            if [10, 20, 30, 40].contains(i) {
+                pirate = child
+            }
+        }
+        measure {
+            _ = try! JSONEncoder().encode(pirate)
+        }
+    }
+    
+    func testAccessEncoder() {
+        class Pirate: Codable {
+            @Observable var greeting = "Arr!"
+            @Observable var legs = 2
+            @Observable var children = [Pirate]()
+        }
+        
+        let pirate = Pirate()
+        let child = Pirate()
+        child.greeting = "oh-hoy"
+        child.legs = 44
+        pirate.children.append(child)
+        
+        try! AccessEncoder().accessProperties(in: pirate)
+    }
+    
+    func testCodable() {
+        class Pirate: Codable {
+            @Observable var greeting = "Arr!"
+            @Observable var legs = 2
+            @Observable var children = [Pirate]()
+        }
+        
+        let pirate = Pirate()
+        pirate.children.append(Pirate())
+        
+        let json = try! JSONEncoder().encode(pirate)        
+        let copyPirate = try! JSONDecoder().decode(Pirate.self, from: json)
+        
+        let exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 2
+        autorun {
+            copyPirate.children.forEach({
+                print("\($0.greeting)")
+            })
+            exp.fulfill()
+        }
+        
+        copyPirate.children.first?.greeting = "Oooofy"
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func testObserveWholeGraph() {
+        class Pirate: Codable {
+            @Observable var greeting = "Arr!"
+            @Observable var legs = 2
+            @Observable var children = [Pirate]()
+        }
+        let mainPirate = Pirate()
+        var pirate = mainPirate
+        var deepChildrens = [Pirate]()
+        for i in 1...50 {
+            let child = Pirate()
+            child.greeting = "oh-hoy"
+            child.legs = i
+            pirate.children.append(child)
+            if [10, 20, 30, 40].contains(i) {
+                deepChildrens.append(child)
+                pirate = child
+            }
+        }
+        
+        // TODO: tests for removing, adding etc..
+        
+        let exp = expectation(description: "")
+        exp.expectedFulfillmentCount = 2
+        let access = AccessEncoder()
+        reaction({
+            try! access.accessProperties(in: mainPirate)
+        }, {
+            exp.fulfill()
+            print("Changed pirate!")
+        })
+        
+        reaction({
+            deepChildrens[2].greeting
+        }, {
+            print("Got greeting \($0)")
+            exp.fulfill()
+        })
+        
+        deepChildrens[2].greeting = "Woohoo"
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    // ----------------------------
+    
     func testOrderOfExecutionAndEnsureOneRunOnly() {
         // Create dep. graph like:
         // firstName <-- [autorun, fullname]
