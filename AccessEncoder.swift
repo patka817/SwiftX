@@ -1,135 +1,19 @@
 //
-//  PropertyWrappers.swift
-//  test
+//  AccessEncoder.swift
+//  SwiftX
 //
-//  Created by Patrik Karlsson on 2020-10-05.
+//  Created by Patrik Karlsson on 2020-10-16.
 //  Copyright © 2020 Patrik Karlsson. All rights reserved.
 //
 
 import Foundation
-import SwiftUI
-import Combine
 
-struct Weak<T> {
-    private weak var _value: AnyObject?
-    var value: T? {
-        get { _value as? T }
-        set { _value = newValue as AnyObject }
-    }
-    
-    init(_ value: T) {
-        self.value = value
-    }
-}
-
-protocol IObservable: AnyObject {
-    var observers: [ObjectIdentifier: IObserver] { get set }
-    var observersLock: os_unfair_lock_s { get set }
-    
-    func onObserverCancelled(_ observer: IObserver)
-}
-
-extension IObservable {
-    // TODO: rename? or not..
-     func willGetValue() {
-        if let obs = ObserverAdministrator.shared.currentObserverContext {
-            os_unfair_lock_lock(&observersLock)
-            observers[ObjectIdentifier(obs)] = obs
-            os_unfair_lock_unlock(&observersLock)
-            obs.didAccess(observable: self)
-            #if DEBUG
-            ReactionCyclicChangeDetector.current.accessedObservable(ObjectIdentifier(self))
-            #endif
-        }
-    }
-    
-    func didSetValue() {
-        ObserverAdministrator.shared.didUpdate(observable: self)
-    }
-    
-     func scheduleObserversForUpdate() {
-        os_unfair_lock_lock(&observersLock)
-        // Take copy to prevent deadlock between our lock and transactionLock..
-        let observers = self.observers
-        os_unfair_lock_unlock(&observersLock)
-        ObserverAdministrator.shared.scheduleForUpdates(observers: observers)
-    }
-
-     func onObserverCancelled(_ observer: IObserver) {
-        os_unfair_lock_lock(&observersLock)
-        observers[ObjectIdentifier(observer)] = nil
-        os_unfair_lock_unlock(&observersLock)
-    }
-}
-
-// MARK: - PropertyWrapper
-
-// Should IObserver contain its dependencies (Observables)?
-
-@propertyWrapper public final class Observable<Value>: IObservable {
-    internal var observers = [ObjectIdentifier: IObserver]()
-    internal var observersLock = os_unfair_lock_s()
-    
-    private var value: Value {
-        didSet {
-            didSetValue()
-        }
-    }
-    
-    public init(wrappedValue: Value) {
-        self.value = wrappedValue
-    }
-    
-    public init(from decoder: Decoder) throws where Value: Codable {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let value = try container.decode(Value.self, forKey: .wrappedValue)
-        self.value = value
-    }
-
-    deinit {
-        print("deiniting, got \(observers.count) observers")
-
-    }
-    
-    public var wrappedValue: Value {
-        get {
-            print("GET \(value)")
-            willGetValue()
-            return value
-        }
-        set {
-            value = newValue
-        }
-    }
-    
-    public var projectedValue: Binding<Value> {
-        Binding(get: {
-            self.wrappedValue
-        }, set: { self.wrappedValue = $0 })
-    }
-}
-
-extension Observable: Codable where Value: Codable {
-    enum CodingKeys: String, CodingKey {
-        case wrappedValue
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        let value = wrappedValue
-        try container.encode(value, forKey: .wrappedValue)
-    }
-}
-
-// --------- TODO MOVE ------------
-
-// TODO: Internal. We should expose a function for observing a whole object-graph.
-public struct AccessEncoder {
+internal struct AccessEncoder {
     private let encoder = _AccessEncoder()
     
-    public init() { }
+    init() { }
     
-    public func accessProperties<V: Encodable>(in value: V) throws {
+    func accessProperties<V: Encodable>(in value: V) throws {
         try value.encode(to: encoder)
     }
 }

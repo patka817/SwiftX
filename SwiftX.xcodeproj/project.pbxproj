@@ -7,9 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		165FE25B253A3D4500296070 /* DeepObserveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165FE25A253A3D4500296070 /* DeepObserveTests.swift */; };
+		165FE260253A405B00296070 /* AccessEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165FE25F253A405B00296070 /* AccessEncoder.swift */; };
+		165FE265253A409500296070 /* IObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165FE264253A409500296070 /* IObserver.swift */; };
+		165FE26D253A40FC00296070 /* Weak.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165FE26C253A40FC00296070 /* Weak.swift */; };
+		165FE272253A411700296070 /* IObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165FE271253A411700296070 /* IObservable.swift */; };
+		165FE277253A41FF00296070 /* Computed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165FE276253A41FF00296070 /* Computed.swift */; };
 		1662FDF02534F642004E6272 /* CollectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662FDEF2534F642004E6272 /* CollectionTests.swift */; };
 		1662FDF52534F689004E6272 /* ComputedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1662FDF42534F689004E6272 /* ComputedTests.swift */; };
-		1683C304252E608000D69F19 /* PropertyWrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C2FC252E608000D69F19 /* PropertyWrappers.swift */; };
+		1683C304252E608000D69F19 /* PropertyWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C2FC252E608000D69F19 /* PropertyWrapper.swift */; };
 		1683C305252E608000D69F19 /* SwiftX.h in Headers */ = {isa = PBXBuildFile; fileRef = 1683C2FD252E608000D69F19 /* SwiftX.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1683C307252E608000D69F19 /* ObserverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C2FE252E608000D69F19 /* ObserverContext.swift */; };
 		1683C309252E608000D69F19 /* MutexLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683C2FF252E608000D69F19 /* MutexLock.swift */; };
@@ -36,9 +42,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		165FE25A253A3D4500296070 /* DeepObserveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepObserveTests.swift; sourceTree = "<group>"; };
+		165FE25F253A405B00296070 /* AccessEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessEncoder.swift; sourceTree = "<group>"; };
+		165FE264253A409500296070 /* IObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IObserver.swift; sourceTree = "<group>"; };
+		165FE26C253A40FC00296070 /* Weak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Weak.swift; sourceTree = "<group>"; };
+		165FE271253A411700296070 /* IObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IObservable.swift; sourceTree = "<group>"; };
+		165FE276253A41FF00296070 /* Computed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Computed.swift; sourceTree = "<group>"; };
 		1662FDEF2534F642004E6272 /* CollectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionTests.swift; sourceTree = "<group>"; };
 		1662FDF42534F689004E6272 /* ComputedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputedTests.swift; sourceTree = "<group>"; };
-		1683C2FC252E608000D69F19 /* PropertyWrappers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PropertyWrappers.swift; path = SwiftX/PropertyWrappers.swift; sourceTree = "<group>"; };
+		1683C2FC252E608000D69F19 /* PropertyWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PropertyWrapper.swift; path = SwiftX/PropertyWrapper.swift; sourceTree = "<group>"; };
 		1683C2FD252E608000D69F19 /* SwiftX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SwiftX.h; path = SwiftX/SwiftX.h; sourceTree = "<group>"; };
 		1683C2FE252E608000D69F19 /* ObserverContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ObserverContext.swift; path = SwiftX/ObserverContext.swift; sourceTree = "<group>"; };
 		1683C2FF252E608000D69F19 /* MutexLock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MutexLock.swift; path = SwiftX/MutexLock.swift; sourceTree = "<group>"; };
@@ -146,10 +158,15 @@
 				1683C2FF252E608000D69F19 /* MutexLock.swift */,
 				1683C300252E608000D69F19 /* ObserverAdministrator.swift */,
 				1683C2FE252E608000D69F19 /* ObserverContext.swift */,
-				1683C2FC252E608000D69F19 /* PropertyWrappers.swift */,
+				1683C2FC252E608000D69F19 /* PropertyWrapper.swift */,
 				1683C301252E608000D69F19 /* SwiftUI.swift */,
 				1683C2FD252E608000D69F19 /* SwiftX.h */,
 				1683C32A252E61AF00D69F19 /* Info.plist */,
+				165FE25F253A405B00296070 /* AccessEncoder.swift */,
+				165FE264253A409500296070 /* IObserver.swift */,
+				165FE26C253A40FC00296070 /* Weak.swift */,
+				165FE271253A411700296070 /* IObservable.swift */,
+				165FE276253A41FF00296070 /* Computed.swift */,
 			);
 			name = SwiftX;
 			sourceTree = "<group>";
@@ -161,6 +178,7 @@
 				16AE266F252E5E4500D5805C /* Info.plist */,
 				1662FDEF2534F642004E6272 /* CollectionTests.swift */,
 				1662FDF42534F689004E6272 /* ComputedTests.swift */,
+				165FE25A253A3D4500296070 /* DeepObserveTests.swift */,
 			);
 			path = SwiftXTests;
 			sourceTree = "<group>";
@@ -316,10 +334,15 @@
 			files = (
 				1683C309252E608000D69F19 /* MutexLock.swift in Sources */,
 				1683C30D252E608000D69F19 /* SwiftUI.swift in Sources */,
-				1683C304252E608000D69F19 /* PropertyWrappers.swift in Sources */,
+				1683C304252E608000D69F19 /* PropertyWrapper.swift in Sources */,
+				165FE265253A409500296070 /* IObserver.swift in Sources */,
+				165FE260253A405B00296070 /* AccessEncoder.swift in Sources */,
+				165FE26D253A40FC00296070 /* Weak.swift in Sources */,
 				1683C307252E608000D69F19 /* ObserverContext.swift in Sources */,
 				1683C30B252E608000D69F19 /* ObserverAdministrator.swift in Sources */,
+				165FE272253A411700296070 /* IObservable.swift in Sources */,
 				1683C30F252E608000D69F19 /* Functions.swift in Sources */,
+				165FE277253A41FF00296070 /* Computed.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -327,6 +350,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				165FE25B253A3D4500296070 /* DeepObserveTests.swift in Sources */,
 				1662FDF52534F689004E6272 /* ComputedTests.swift in Sources */,
 				16AE266E252E5E4500D5805C /* SwiftXTests.swift in Sources */,
 				1662FDF02534F642004E6272 /* CollectionTests.swift in Sources */,

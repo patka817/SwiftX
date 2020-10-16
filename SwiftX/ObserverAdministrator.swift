@@ -203,9 +203,11 @@ final internal class ObserverAdministrator {
     }
     
     private func _updateCurrentObservers() {
+        #if DEBUG
         print("\(pendingUpdateList.count) observers to update")
         let uniques = Set(pendingUpdateList.map({ ObjectIdentifier($0) }))
         print("\(uniques.count)) unique observers to update: \(uniques.map({ "\($0)" }).joined(separator: ", "))")
+        #endif
         
         for observer in pendingUpdateList {
             let id = ObjectIdentifier(observer)
