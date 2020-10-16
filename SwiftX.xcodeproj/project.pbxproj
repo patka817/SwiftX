@@ -43,11 +43,11 @@
 
 /* Begin PBXFileReference section */
 		165FE25A253A3D4500296070 /* DeepObserveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepObserveTests.swift; sourceTree = "<group>"; };
-		165FE25F253A405B00296070 /* AccessEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessEncoder.swift; sourceTree = "<group>"; };
-		165FE264253A409500296070 /* IObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IObserver.swift; sourceTree = "<group>"; };
-		165FE26C253A40FC00296070 /* Weak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Weak.swift; sourceTree = "<group>"; };
-		165FE271253A411700296070 /* IObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IObservable.swift; sourceTree = "<group>"; };
-		165FE276253A41FF00296070 /* Computed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Computed.swift; sourceTree = "<group>"; };
+		165FE25F253A405B00296070 /* AccessEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AccessEncoder.swift; path = SwiftX/AccessEncoder.swift; sourceTree = "<group>"; };
+		165FE264253A409500296070 /* IObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IObserver.swift; path = SwiftX/IObserver.swift; sourceTree = "<group>"; };
+		165FE26C253A40FC00296070 /* Weak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Weak.swift; path = SwiftX/Weak.swift; sourceTree = "<group>"; };
+		165FE271253A411700296070 /* IObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IObservable.swift; path = SwiftX/IObservable.swift; sourceTree = "<group>"; };
+		165FE276253A41FF00296070 /* Computed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Computed.swift; path = SwiftX/Computed.swift; sourceTree = "<group>"; };
 		1662FDEF2534F642004E6272 /* CollectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionTests.swift; sourceTree = "<group>"; };
 		1662FDF42534F689004E6272 /* ComputedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputedTests.swift; sourceTree = "<group>"; };
 		1683C2FC252E608000D69F19 /* PropertyWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PropertyWrapper.swift; path = SwiftX/PropertyWrapper.swift; sourceTree = "<group>"; };
