@@ -70,6 +70,7 @@ public final class Computed<V> {
     }
     
     deinit {
+        print("COMPUTED DEINIT")
         cancellable?.cancel()
     }
 }

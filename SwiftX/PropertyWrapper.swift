@@ -14,7 +14,7 @@ import SwiftUI
 @propertyWrapper public final class Observable<Value>: IObservable {
     internal var observers = [ObjectIdentifier: IObserver]()
     internal var observersLock = os_unfair_lock_s()
-    
+    private let equal: ((Value, Value) -> Bool)?
     private var value: Value {
         didSet {
             didSetValue()
@@ -23,12 +23,27 @@ import SwiftUI
     
     public init(wrappedValue: Value) {
         self.value = wrappedValue
+        self.equal = nil
+    }
+    
+    public init(wrappedValue: Value) where Value: Equatable {
+        print("EQUATABLE")
+        self.value = wrappedValue
+        self.equal = { $0 == $1 }
     }
     
     public init(from decoder: Decoder) throws where Value: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let value = try container.decode(Value.self, forKey: .wrappedValue)
         self.value = value
+        self.equal = nil
+    }
+    
+    public init(from decoder: Decoder) throws where Value: Codable & Equatable {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let value = try container.decode(Value.self, forKey: .wrappedValue)
+        self.value = value
+        self.equal = { $0 == $1 }
     }
 
     public var wrappedValue: Value {
@@ -37,6 +52,10 @@ import SwiftUI
             return value
         }
         set {
+            if equal?(newValue, value) == true {
+                print("Saved an update")
+                return
+            }
             value = newValue
         }
     }

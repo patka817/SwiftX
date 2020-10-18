@@ -30,7 +30,7 @@ public struct ObserverView<V: View>: View {
     }
    
     public var body: some View {
-       print("(re)painting \(self.id)")
+//       print("(re)painting \(self.id)")
         return updater.content
    }
 }

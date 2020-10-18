@@ -47,6 +47,7 @@ final internal class CancellableDisposer {
     }
     
     deinit {
+//        print("disposer deinit")
         self.cancellable?.cancel()
     }
 }

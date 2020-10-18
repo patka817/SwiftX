@@ -78,7 +78,7 @@ final internal class ObserverAdministrator {
         ReactionCyclicChangeDetector.doneTracking()
         #endif 
         transactionLock.unlock()
-        assert(observer.isObserving, "ERROR Adding reaction but not observing changes!")
+//        assert(observer.isObserving, "ERROR Adding reaction but not observing changes!")
     }
     
     // To prevent adding new observers for Computed observables..
@@ -93,9 +93,19 @@ final internal class ObserverAdministrator {
         return value
     }
     
+    var start = Date()
+    #if DEBUG
+    var totalUpdateTime: Double = 0
+    var updates: Double = 0
+    #endif
     func inTransaction<V>(_ transaction: () -> V) -> V {
         transactionLock.inLock {
             let isFirstTransaction = _inTransaction == false
+//            #if DEBUG
+            if isFirstTransaction {
+                start = Date()
+            }
+//            #endif
             _inTransaction = true
             
             let value = transaction()
@@ -107,6 +117,16 @@ final internal class ObserverAdministrator {
                 // in scheduleUpdate which re-enters transaction
                 // which then thinks it is the first transaction..
                 _inTransaction = false
+                
+                let time = Date().timeIntervalSince(start)
+                #if DEBUG
+                totalUpdateTime += time
+                updates += 1
+                print("Update took \(time)s. Avg is: \(totalUpdateTime/updates)s")
+                #endif
+                if time > 0.01 {
+                    NSLog("!!!!!!!!!! \(time) !!!!!!!!!")
+                }
             }
             return value
         }
