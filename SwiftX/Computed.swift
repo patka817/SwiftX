@@ -70,7 +70,6 @@ public final class Computed<V> {
     }
     
     deinit {
-        print("COMPUTED DEINIT")
         cancellable?.cancel()
     }
 }
@@ -80,7 +79,6 @@ extension Computed: IObservable {
         os_unfair_lock_lock(&observersLock)
         observers[ObjectIdentifier(observer)] = nil
         if observers.isEmpty {
-            print("Unobserving all observables, not being observed anymore!")
             unobserveFromAllObservables()
         }
         os_unfair_lock_unlock(&observersLock)

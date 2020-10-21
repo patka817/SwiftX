@@ -14,23 +14,24 @@ public struct ObserverView<V: View>: View {
     private var viewBuilder: () -> V
     @ObservedObject fileprivate var updater: UIUpdater<V>
     let disposer: CancellableDisposer
-    let id = SwiftX.observerID
+    var name: String?
     
-    public init(@ViewBuilder viewBuilder: @escaping () -> V) {
+    public init(_ name: String? = nil, @ViewBuilder viewBuilder: @escaping () -> V) {
         self.viewBuilder = viewBuilder
+        self.name = name
         let updater = UIUpdater<V>()
         self.updater = updater
         
-        let cancel = autorun {
+        let cancel = reaction(named: name, {
             updater.content = viewBuilder()
+        }, {
             updater.objectWillChange.send()
-        }
+        })
         self.disposer = CancellableDisposer(cancel)
-        SwiftX.observerID += 1
     }
    
     public var body: some View {
-//       print("(re)painting \(self.id)")
+//        print("(re)painting \(self.name)")
         return updater.content
    }
 }
@@ -45,8 +46,4 @@ public final class StateProvider<State>: ObservableObject {
 
 private final class UIUpdater<V: View>: ObservableObject, DynamicProperty {
     var content: V?
-}
-
-private struct SwiftX {
-    static var observerID = 0
 }

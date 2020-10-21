@@ -11,14 +11,14 @@ import Combine
 import SwiftUI
 
 @discardableResult
-public func autorun(_ closure: @escaping () -> Void) -> AnyCancellable {
-    reaction(closure, { })
+public func autorun(named name: String? = nil, _ closure: @escaping () -> Void) -> AnyCancellable {
+    reaction(named: name, closure, { })
 }
 
 // Desc, data should only access and return state derived data (@Observable props)
 @discardableResult
-public func reaction<V>(_ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> AnyCancellable {
-    let ctx = ObserverAdministrator.shared.addReaction(trackFunc, onChange)
+public func reaction<V>(named name: String? = nil, _ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> AnyCancellable {
+    let ctx = ObserverAdministrator.shared.addReaction(named: name, trackFunc, onChange)
     return ctx.cancellable
 }
 

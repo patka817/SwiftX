@@ -29,8 +29,8 @@ final internal class ObserverAdministrator {
     
     private init() { }
     
-    func addReaction<V>(_ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> ObserverContext {
-        let ctx = ObserverContext(closure: { ourSelf in
+    func addReaction<V>(named name: String?, _ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> ObserverContext {
+        let ctx = ObserverContext(name: name, closure: { ourSelf in
             // if we run this in a context, we get re-added as observer for "lost" props.
             // We remove ourself from those we have accessed but aren't accessing in this run (so we dont get updated if e.g. moved observables is updated).
             // (we are always run inside an update-loop, hence no need for locking)
@@ -237,9 +237,13 @@ final internal class ObserverAdministrator {
                 continue
             }
             
-            if depCount <= 0 {
+            if depCount == 0 {
                 print("depCount is \(depCount) => update-time!")
                 observer.updated() // need to run on main..!?
+                #if DEBUG
+                depCount -= 1
+                pendingUpdatesDependencyCount[id] = depCount
+                #endif
             } else {
                 print("depCount is \(depCount) => decremented rerun later")
                 depCount -= 1

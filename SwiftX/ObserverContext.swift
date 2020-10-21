@@ -18,9 +18,22 @@ final internal class ObserverContext: IObserver {
     var isObserving = false
     internal var _isTrackingRemovals = false
     internal var _observablesAccessed = Set<ObjectIdentifier>()
+    let name: String?
     
-    init(closure: @escaping (ObserverContext) -> Void) {
+    #if DEBUG
+    let id: Int
+    private static var sharedID = 0
+    #endif
+    
+    init(name: String?, closure: @escaping (ObserverContext) -> Void) {
+        self.name = name
         self.closure = closure
+        
+        #if DEBUG
+        self.id = ObserverContext.sharedID
+        ObserverContext.sharedID += 1
+        #endif
+        
         self.cancellable = AnyCancellable({ [weak self] in
             guard let self = self else { return }
             self.closure = nil
@@ -29,6 +42,9 @@ final internal class ObserverContext: IObserver {
     }
     
     func updated() {
+        #if DEBUG
+        print("Updating \(name ?? "") \(id)")
+        #endif
         closure?(self)
     }
     
