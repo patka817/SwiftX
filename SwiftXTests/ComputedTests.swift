@@ -11,6 +11,92 @@ import SwiftX
 
 class ComputedTests: XCTestCase {
     
+    func testComputedUpdatingObservers() {
+        let state = State()
+        let exp = expectation(description: #function)
+        
+        exp.expectedFulfillmentCount = 4
+        let computed = Computed { () -> Int in
+            exp.fulfill()
+            return state.count * 2
+        }
+        autorun {
+            print("Computed is \(computed.value)")
+            XCTAssert(computed.value == 0 || computed.value == 4)
+            exp.fulfill()
+        }
+        
+        state.count = 2
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func testCyclicGraphDependency() throws {
+        // 1 - 2 - 3 - 1.
+        // So:
+        // 3 dep: [1, 2].
+        // 2 dep: [1]
+        // 1 dep: N/A (atom)
+        let state = State()
+        
+        let computed = SwiftX.computed({
+            state.count * 2
+        })
+        
+        let exp = expectation(description: "Should only update observer once no matter how many dependencies that has been updated")
+        exp.assertForOverFulfill = true
+        exp.expectedFulfillmentCount = 1
+        
+        var first = true
+        autorun {
+            print("[3] computed is \(computed.value) and count \(state.count)")
+            XCTAssert(computed.value == (state.count * 2))
+            
+            if !first {
+                exp.fulfill()
+            } else {
+                first = false
+            }
+        }
+        
+        state.count = 1
+        
+        wait(for: [exp], timeout: 5)
+    }
+    
+    func testCyclicGraphDependencyWhenComputedIsNotChanged() throws {
+        // 1 - 2 - 3 - 1.
+        // So:
+        // 3 dep: [1, 2].
+        // 2 dep: [1]
+        // 1 dep: N/A (atom)
+        let state = State()
+        
+        let computed = SwiftX.computed({
+            return 0
+        })
+        
+        let exp = expectation(description: "Should only update observer once no matter how many dependencies that has been updated")
+        exp.assertForOverFulfill = true
+        exp.expectedFulfillmentCount = 1
+        
+        var first = true
+        autorun {
+            print("[3] computed is \(computed.value) and count \(state.count)")
+            
+            if !first {
+                exp.fulfill()
+            } else {
+                first = false
+            }
+        }
+        
+        state.count = 1
+        
+        wait(for: [exp], timeout: 5)
+    }
+
+    
     func testShouldNotRunWithoutObservers() {
         let parent = Node()
         let exp = expectation(description: "")
@@ -200,4 +286,9 @@ class ComputedTests: XCTestCase {
         p.left?.right?.value = "2"
         wait(for: [exp!], timeout: 1)
     }
+}
+
+private struct State {
+    @Observable var count = 0
+    @Observable var list = [Int]()
 }

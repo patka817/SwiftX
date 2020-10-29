@@ -238,14 +238,18 @@ final internal class ObserverAdministrator {
             }
             
             if depCount == 0 {
+                #if DEBUG
                 print("depCount is \(depCount) => update-time!")
+                #endif
                 observer.updated() // need to run on main..!?
                 #if DEBUG
                 depCount -= 1
                 pendingUpdatesDependencyCount[id] = depCount
                 #endif
             } else {
+                #if DEBUG
                 print("depCount is \(depCount) => decremented rerun later")
+                #endif
                 depCount -= 1
                 pendingUpdatesDependencyCount[id] = depCount
             }

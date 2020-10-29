@@ -1,4 +1,5 @@
 *.DS_Store
 *.xcuserstate
 *.xcuserdatad
-*xcodeproj/xcuserdata/*
+SwiftX.xcodeproj/xcuserdata
+SwiftX.xcodeproj/xcuserdata

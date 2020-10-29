@@ -27,7 +27,6 @@ import SwiftUI
     }
     
     public init(wrappedValue: Value) where Value: Equatable {
-        print("EQUATABLE")
         self.value = wrappedValue
         self.equal = { $0 == $1 }
     }
@@ -53,7 +52,9 @@ import SwiftUI
         }
         set {
             if equal?(newValue, value) == true {
+                #if DEBUG
                 print("Saved an update")
+                #endif
                 return
             }
             value = newValue

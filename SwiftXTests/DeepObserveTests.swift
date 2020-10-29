@@ -92,6 +92,20 @@ class DeepObserveTests: XCTestCase {
         wait(for: [exp], timeout: 1)
     }
     
+    func testEqualityCheckPerf() {
+        measure {
+            let pirate = Pirate()
+            pirate.greeting = "HEJ"
+            let exp = expectation(description: "")
+            reaction({ pirate.greeting }, {
+                exp.fulfill()
+            })
+            pirate.greeting = "HEJ"
+            pirate.greeting = "1234"
+            wait(for: [exp], timeout: 1)
+        }
+    }
+    
     private func createPirateGraph(depth: Int = 50) -> (pirate: Pirate, deepChildren: [Pirate], deepCrew: [Pirate]) {
         let mainPirate = Pirate()
         var pirate = mainPirate
@@ -125,7 +139,14 @@ class DeepObserveTests: XCTestCase {
 
 }
 
-class Pirate: Codable {
+class Pirate: Codable, Equatable {
+    static func == (lhs: Pirate, rhs: Pirate) -> Bool {
+        lhs.children == rhs.children &&
+            lhs.greeting == rhs.greeting &&
+            lhs.legs == rhs.legs &&
+            lhs.crew == rhs.crew
+    }
+    
     @Observable var greeting = "Arr!"
     @Observable var legs = 2
     @Observable var children = [Pirate]()
