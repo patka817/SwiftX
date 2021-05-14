@@ -25,7 +25,13 @@ public struct ObserverView<V: View>: View {
         let cancel = reaction(named: name, {
             updater.content = viewBuilder()
         }, {
-            updater.objectWillChange.send()
+            if Thread.isMainThread {
+                updater.objectWillChange.send()
+            } else {
+                DispatchQueue.main.async {
+                    updater.objectWillChange.send()
+                }
+            }
         })
         self.disposer = CancellableDisposer(cancel)
     }

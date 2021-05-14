@@ -11,8 +11,8 @@ import Combine
 import SwiftUI
 
 @discardableResult
-public func autorun(named name: String? = nil, _ closure: @escaping () -> Void) -> AnyCancellable {
-    reaction(named: name, closure, { })
+public func autorun(named name: String? = nil, _ onChange: @escaping () -> Void) -> AnyCancellable {
+    reaction(named: name, onChange, { })
 }
 
 // Desc, data should only access and return state derived data (@Observable props)
