@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Weak<T> {
+internal struct Weak<T> {
     private weak var _value: AnyObject?
     var value: T? {
         get { _value as? T }

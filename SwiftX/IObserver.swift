@@ -28,7 +28,7 @@ internal protocol IObserver: AnyObject {
     func cancel()
 }
 
-extension IObserver {
+internal extension IObserver {
     func startTrackingRemovals() {
         _isTrackingRemovals = true
     }

@@ -18,18 +18,20 @@ final internal class ObserverAdministrator {
     private var updatedObservables = [ObjectIdentifier: IObservable]()
     private var _hasScheduled = false
     
-    internal var currentObserverContext: IObserver? {
+    final internal var currentObserverContext: IObserver? {
         get {
             transactionLock.inLock {
                 return _currentObserverContext
             }
         }
     }
-    internal var _currentObserverContext: IObserver?
+    
+    /// - Note: Not thread safe, you must be sure that you dont access this outside the transaction lock!!
+    final internal var _currentObserverContext: IObserver?
     
     private init() { }
     
-    func addReaction<V>(named name: String?, _ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> ObserverContext {
+    final func addReaction<V>(named name: String?, _ trackFunc: @escaping () -> V, _ onChange: @escaping (V) -> Void) -> ObserverContext {
         let ctx = ObserverContext(name: name, closure: { ourSelf in
             // if we run this in a context, we get re-added as observer for "lost" props.
             // We remove ourself from those we have accessed but aren't accessing in this run (so we dont get updated if e.g. moved observables is updated).
@@ -62,7 +64,7 @@ final internal class ObserverAdministrator {
         return ctx
     }
     
-    func addReaction<V, O: IObserver>(observer: O, _ trackFunc: @escaping () -> V) {
+    final func addReaction<V, O: IObserver>(observer: O, _ trackFunc: @escaping () -> V) {
         transactionLock.lock()
         let prevCtx = _currentObserverContext
         
@@ -83,7 +85,7 @@ final internal class ObserverAdministrator {
     
     // To prevent adding new observers for Computed observables..
     // (Maybe Computed --> derivation?)
-    func runWithoutObserverContext<V>(_ closure: () -> V) -> V {
+    final func runWithoutObserverContext<V>(_ closure: () -> V) -> V {
         transactionLock.lock()
         let ctx = _currentObserverContext
         _currentObserverContext = nil
@@ -112,7 +114,7 @@ final internal class ObserverAdministrator {
             
             if isFirstTransaction {
                 _scheduleUpdate()
-                // Set the intransaction AFTER we run updates..
+                // Set the intransaction AFTER we run schedule updates..
                 // otherwise we might trigger something
                 // in scheduleUpdate which re-enters transaction
                 // which then thinks it is the first transaction..
@@ -135,7 +137,7 @@ final internal class ObserverAdministrator {
     // "Mark" this observable as changed in the current transaction (or the new one created).
     // This makes us track only outside-changes so we can propagate updates when all are done in the wrapped transaction.
     // If a change is done without transaction we get one here anyway, and will thus have the correct behaviour.
-    func didUpdate(observable: IObservable) {
+    final func didUpdate(observable: IObservable) {
         inTransaction({
             updatedObservables[ObjectIdentifier(observable)] = observable
             #if DEBUG
@@ -144,7 +146,7 @@ final internal class ObserverAdministrator {
         })
     }
     
-    func scheduleForUpdates(observers: [ObjectIdentifier: IObserver]) {
+    final func scheduleForUpdates(observers: [ObjectIdentifier: IObserver]) {
         // When exiting the last, we do this update thingy and schedule for update.
         // It should be sufficient to only track observers-to-update uniquely (we don't need to store dep. count yet then).
         #if DEBUG
@@ -281,22 +283,22 @@ final internal class ReactionCyclicChangeDetector {
     
     private init() { }
     
-    var isCyclic: Bool {
+    final var isCyclic: Bool {
         !accessedObservables.isDisjoint(with: settedObservables)
     }
     
-    var objectIdBothAccessedAndSet: ObjectIdentifier? {
+    final var objectIdBothAccessedAndSet: ObjectIdentifier? {
         accessedObservables.first(where: { settedObservables.contains($0) })
     }
     
     // TODO fix when autorun trigger another autorun by setting an observable  value that the other autorun listens to...
-    func accessedObservable(_ objectId: ObjectIdentifier) {
+    final func accessedObservable(_ objectId: ObjectIdentifier) {
         guard ObserverAdministrator.shared._currentObserverContext != nil else { return }
         accessedObservables.insert(objectId)
         assert(isCyclic == false, "cyclic dependency detected for ObjectId \(objectId)")
     }
     
-    func didSetObservable(_ objectId: ObjectIdentifier) {
+    final func didSetObservable(_ objectId: ObjectIdentifier) {
         guard ObserverAdministrator.shared._currentObserverContext != nil else { return }
         settedObservables.insert(objectId)
         assert(isCyclic == false, "cyclic dependency detected for ObjectId \(objectId)")

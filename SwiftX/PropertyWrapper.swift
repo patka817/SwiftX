@@ -12,10 +12,10 @@ import SwiftUI
 // MARK: - PropertyWrapper
 
 @propertyWrapper public final class Observable<Value>: IObservable {
-    internal var observers = [ObjectIdentifier: IObserver]()
-    internal var observersLock = os_unfair_lock_s()
-    private let equal: ((Value, Value) -> Bool)?
-    private var value: Value {
+    final internal var observers = [ObjectIdentifier: IObserver]()
+    final internal var observersLock = os_unfair_lock_s()
+    final private let equal: ((Value, Value) -> Bool)?
+    final private var value: Value {
         didSet {
             didSetValue()
         }
@@ -45,7 +45,7 @@ import SwiftUI
         self.equal = { $0 == $1 }
     }
 
-    public var wrappedValue: Value {
+    final public var wrappedValue: Value {
         get {
             willGetValue()
             return value
@@ -61,7 +61,7 @@ import SwiftUI
         }
     }
     
-    public var projectedValue: Binding<Value> {
+    final public var projectedValue: Binding<Value> {
         Binding(get: {
             self.wrappedValue
         }, set: { self.wrappedValue = $0 })

@@ -10,21 +10,21 @@ import Foundation
 import Combine
 
 public final class Computed<V> {
-    internal var observers = [ObjectIdentifier : IObserver]()
-    internal var observersLock = os_unfair_lock_s()
+    final internal var observers = [ObjectIdentifier : IObserver]()
+    final internal var observersLock = os_unfair_lock_s()
     
-    internal var isObserving = false
-    internal var observingObservablesLock = os_unfair_lock_s()
-    internal var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
-    private var cancellable: AnyCancellable?
-    internal var _observablesAccessed = Set<ObjectIdentifier>()
-    internal var _isTrackingRemovals = false
+    final internal var isObserving = false
+    final internal var observingObservablesLock = os_unfair_lock_s()
+    final internal var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
+    final private var cancellable: AnyCancellable?
+    final internal var _observablesAccessed = Set<ObjectIdentifier>()
+    final internal var _isTrackingRemovals = false
     
-    private var lock = os_unfair_lock_s()
-    private let computeFunc: () -> V
+    final private var lock = os_unfair_lock_s()
+    final private let computeFunc: () -> V
     
-    private var _value: V?
-    public var value: V {
+    final private var _value: V?
+    final public var value: V {
         get {
             willGetValue() // <--- adds observer to this if possible
             os_unfair_lock_lock(&lock)
@@ -75,7 +75,7 @@ public final class Computed<V> {
 }
 
 extension Computed: IObservable {
-    func onObserverCancelled(_ observer: IObserver) {
+    final func onObserverCancelled(_ observer: IObserver) {
         os_unfair_lock_lock(&observersLock)
         observers[ObjectIdentifier(observer)] = nil
         if observers.isEmpty {
@@ -86,17 +86,17 @@ extension Computed: IObservable {
 }
 
 extension Computed: IObserver {
-    func willUpdate() { // Always called inTransaction???? -> schedule can be made without the lock..
+    final func willUpdate() { // Always called inTransaction???? -> schedule can be made without the lock..
         scheduleObserversForUpdate()
     }
     
-    func updated() {
+    final func updated() {
         os_unfair_lock_lock(&self.lock)
         self._value = nil
         os_unfair_lock_unlock(&self.lock)
     }
     
-    func cancel() {
+    final func cancel() {
         cancellable?.cancel()
     }
 }

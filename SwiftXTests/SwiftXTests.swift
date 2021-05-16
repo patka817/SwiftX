@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import SwiftX
+@testable import SwiftX
 
 class SwiftXTests: XCTestCase {
     var state: AppState!
@@ -306,7 +306,47 @@ class SwiftXTests: XCTestCase {
             XCTAssert(comps.last!.value == newValue)
         }
     }
-
+    
+    func testMultithreadedAccess() {
+        let exp = expectation(description: "Should occur once only")
+        exp.assertForOverFulfill = true
+        exp.expectedFulfillmentCount = 1
+        
+        let group = DispatchGroup()
+        
+        for _ in 0...100 {
+            group.enter()
+            DispatchQueue.global().async {
+                for _ in 0...100 {
+                    _ = self.state.greeting
+                    _ = self.state.count
+                    _ = self.state.testTrigger
+                    Thread.sleep(forTimeInterval: 0.001)
+                }
+                group.leave()
+            }
+        }
+        
+        group.enter()
+        DispatchQueue.global().async {
+            reaction({
+                return self.state.mainContentGreeting
+            }, {
+                _ = $0
+                exp.fulfill()
+            })
+            group.leave()
+        }
+        
+        let res = group.wait(timeout: .now() + 5)
+        XCTAssert(res == .success)
+        
+        self.state.greeting = UUID().uuidString
+        self.state.count = 666
+        self.state.mainContentGreeting = "Whooper is good!"
+        
+        wait(for: [exp], timeout:5)
+    }
 }
 
 struct StateWrapper {

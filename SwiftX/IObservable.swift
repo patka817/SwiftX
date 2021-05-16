@@ -8,14 +8,14 @@
 
 import Foundation
 
-protocol IObservable: AnyObject {
+internal protocol IObservable: AnyObject {
     var observers: [ObjectIdentifier: IObserver] { get set }
     var observersLock: os_unfair_lock_s { get set }
     
     func onObserverCancelled(_ observer: IObserver)
 }
 
-extension IObservable {
+internal extension IObservable {
     // TODO: rename? or not..
      func willGetValue() {
         if let obs = ObserverAdministrator.shared.currentObserverContext {

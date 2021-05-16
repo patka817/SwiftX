@@ -11,17 +11,17 @@ import Combine
 import SwiftUI
 
 final internal class ObserverContext: IObserver {
-    internal var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
-    internal var observingObservablesLock = os_unfair_lock_s()
-    var closure: ((ObserverContext) -> Void)?
-    var cancellable: AnyCancellable!
-    var isObserving = false
-    internal var _isTrackingRemovals = false
-    internal var _observablesAccessed = Set<ObjectIdentifier>()
-    let name: String?
+    final internal var observingObservables = [ObjectIdentifier: Weak<(IObservable)>]()
+    final internal var observingObservablesLock = os_unfair_lock_s()
+    final var closure: ((ObserverContext) -> Void)?
+    final var cancellable: AnyCancellable!
+    final var isObserving = false
+    final internal var _isTrackingRemovals = false
+    final internal var _observablesAccessed = Set<ObjectIdentifier>()
+    final let name: String?
     
     #if DEBUG
-    let id: Int
+    final let id: Int
     private static var sharedID = 0
     #endif
     
@@ -41,16 +41,16 @@ final internal class ObserverContext: IObserver {
         })
     }
     
-    func updated() {
+    final func updated() {
         #if DEBUG
         print("Updating \(name ?? "") \(id)")
         #endif
         closure?(self)
     }
     
-    func willUpdate() { }
+    final func willUpdate() { }
     
-    func cancel() {
+    final func cancel() {
         cancellable.cancel()
     }
 }

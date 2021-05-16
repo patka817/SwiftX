@@ -37,27 +37,27 @@ final internal class MutexLock {
         pthread_mutex_destroy(&self._lock)
     }
     
-    func inLock(_ work: () throws -> Void) rethrows {
+    final func inLock(_ work: () throws -> Void) rethrows {
         defer { unlock() }
         lock()
         try work()
     }
     
-    func inLock<ReturnType>(_ work: () throws -> ReturnType) rethrows -> ReturnType {
+    final func inLock<ReturnType>(_ work: () throws -> ReturnType) rethrows -> ReturnType {
         defer { unlock() }
         lock()
         return try work()
     }
     
-    func tryLock() -> Bool {
+    final func tryLock() -> Bool {
         pthread_mutex_trylock(&_lock) == 0
     }
     
-    func lock() {
+    final func lock() {
         pthread_mutex_lock(&_lock)
     }
     
-    func unlock() {
+    final func unlock() {
         pthread_mutex_unlock(&_lock)
     }
 }

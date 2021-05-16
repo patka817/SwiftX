@@ -286,6 +286,38 @@ class ComputedTests: XCTestCase {
         p.left?.right?.value = "2"
         wait(for: [exp!], timeout: 1)
     }
+    
+    func testPredictability() {
+        struct PState {
+            @Observable var firstName = "Patrik"
+            @Observable var lastName = "Karlsson"
+        }
+        let state = PState()
+        let fullName = computed({ "\(state.firstName) \(state.lastName)"})
+        
+        let exp = expectation(description: "test")
+        exp.assertForOverFulfill = true
+        exp.expectedFulfillmentCount = 1
+        reaction({ return fullName.value }, {
+            XCTAssert($0 == "Patrik Larsson")
+            exp.fulfill()
+        })
+        
+        var count = 0
+        autorun {
+            if count == 0 {
+                XCTAssert(fullName.value == "Patrik Karlsson")
+            } else {
+                XCTAssert(fullName.value == "Patrik Larsson")
+            }
+            count += 1
+        }
+        XCTAssert(fullName.value == "Patrik Karlsson")
+        
+        state.lastName = "Larsson"
+        XCTAssert(fullName.value == "Patrik Larsson")
+        wait(for: [exp], timeout: 1)
+    }
 }
 
 private struct State {
