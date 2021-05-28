@@ -58,9 +58,19 @@ final internal class ObserverAdministrator {
             #if DEBUG
             ReactionCyclicChangeDetector.doneTracking()
             #endif
+            
+            #if DEBUG
+            print("\(name ?? ourSelf.id.description) is observing \(ourSelf.observingObservables.count) nr of observables")
+            #endif
+            
             self._currentObserverContext = prevCtx
         })
         addReaction(observer: ctx, trackFunc)
+        
+        #if DEBUG
+        print("\(name ?? ctx.id.description) is observing \(ctx.observingObservables.count) nr of observables")
+        #endif
+        
         return ctx
     }
     
